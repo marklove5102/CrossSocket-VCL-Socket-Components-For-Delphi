@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="g" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#00b4ff"/>
+      <stop offset="100%" stop-color="#0066cc"/>
+    </radialGradient>
+  </defs>
+  <rect rx="10" ry="10" width="64" height="64" fill="url(#g)" />
+  <g fill="#fff" transform="translate(6,10)">
+    <circle cx="8" cy="22" r="6" opacity="0.95" />
+    <path d="M8 16 L36 6 L36 38 L8 28 Z" fill="#fff" opacity="0.06"/>
+    <g transform="translate(0,0) scale(0.9)">
+      <path d="M12 14 L44 2" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-opacity="0.9" fill="none"/>
+    </g>
+    <text x="28" y="32" font-family="Segoe UI, Arial" font-size="14" fill="#ffffff" text-anchor="middle" font-weight="700">UDP</text>
+  </g>
+  <g opacity="0.18"><rect x="0" y="0" width="64" height="64" fill="#000"/></g>
+</svg>

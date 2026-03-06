@@ -13,46 +13,44 @@ uses
   Net.CrossSocket.Base;
 
 type
-  // RE-EXPORT INTERFACES FOR IDE COMPATIBILITY - THIS IS THE FIX!
   ICrossWebSocketConnection = Net.CrossWebSocketServer.ICrossWebSocketConnection;
   ICrossWebSocketServer = Net.CrossWebSocketServer.ICrossWebSocketServer;
   TWsMessageType = Net.CrossWebSocketParser.TWsMessageType;
 
-  // MINIMAL server state - NO BULLSHIT
   TCrossWebSocketServerState = (
     ssIdle,
     ssListening,
     ssError
   );
 
-  // Client ID type for easy identification
-  TClientID = string;
-
-  // MINIMAL events - NO STATISTICS BULLSHIT
-  TCrossWebSocketClientConnectedEvent = procedure(Sender: TObject; const ClientID: TClientID; ClientConnection: ICrossWebSocketConnection) of object;
-  TCrossWebSocketClientDisconnectedEvent = procedure(Sender: TObject; const ClientID: TClientID; ClientConnection: ICrossWebSocketConnection) of object;
-  TCrossWebSocketErrorEvent = procedure(Sender: TObject; const ErrorMsg: string) of object;
-  TCrossWebSocketServerHandleMessageEvent = procedure(Sender: TObject; const ClientID: TClientID; ClientConnection: ICrossWebSocketConnection; const Data: TBytes) of object;
-
-  // Client connection record for tracking
-  TClientConnectionInfo = record
-    ClientID: TClientID;
-    Connection: ICrossWebSocketConnection;
+  // **Receive buffer for message reassembly**
+  TReceiveBuffer = record
+    Buffer: TBytes;
+    ExpectedLength: Integer;
+    CurrentLength: Integer;
+    HeaderReceived: Boolean;
   end;
 
-  /// HIGH-PERFORMANCE Cross Socket WebSocket Server - OPTIMIZED FOR 100K CONNECTIONS WITH CLIENT ID SUPPORT
+  TCrossWebSocketClientConnectedEvent = procedure(Sender: TObject; ClientID: Int64; ClientConnection: ICrossWebSocketConnection) of object;
+  TCrossWebSocketClientDisconnectedEvent = procedure(Sender: TObject; ClientID: Int64; ClientConnection: ICrossWebSocketConnection) of object;
+  TCrossWebSocketErrorEvent = procedure(Sender: TObject; const ErrorMsg: string) of object;
+  TCrossWebSocketServerHandleMessageEvent = procedure(Sender: TObject; ClientID: Int64; ClientConnection: ICrossWebSocketConnection; const aCmd: Int64; const aData: TBytes) of object;
+
+  TClientConnectionInfo = record
+    ClientID: Int64;
+    Connection: ICrossWebSocketConnection;
+    ReceiveBuffer: TReceiveBuffer;
+  end;
+
+  /// WebSocket Server WITH MESSAGE FRAMING AND COMMAND ID!
   TCrossSocketWebSocketServer = class(TComponent)
   private
-    // ONLY essential objects
     fWebSocketServer: ICrossWebSocketServer;
-
-    // HIGH-PERFORMANCE connection tracking for broadcasting and client ID management
     fConnections: TList<TClientConnectionInfo>;
-    fClientLookup: TDictionary<TClientID, ICrossWebSocketConnection>;
-    fConnectionToClientID: TDictionary<ICrossWebSocketConnection, TClientID>; // REVERSE LOOKUP - CRITICAL FIX!
-    fConnectionsLock: TCriticalSection; // MINIMAL locking - only for connection list
+    fClientLookup: TDictionary<Int64, ICrossWebSocketConnection>;
+    fConnectionToClientID: TDictionary<ICrossWebSocketConnection, Int64>;
+    fConnectionsLock: TCriticalSection;
 
-    // ONLY essential properties
     fPort: Integer;
     fActive: Boolean;
     fLastError: string;
@@ -60,28 +58,35 @@ type
     fBindInterface: string;
     fServerState: TCrossWebSocketServerState;
 
-    // ATOMIC counters ONLY - NO LOCKING
-    fClientCount: Integer;
-    fNextClientID: Integer; // For generating unique client IDs
+    // **Message framing**
+    fUseMessageFraming: Boolean;
+    fMaxMessageSize: Integer;
 
-    // MINIMAL events
+    fClientCount: Integer;
+    fNextClientID: Int64;
+
     fOnClientConnected: TCrossWebSocketClientConnectedEvent;
     fOnClientDisconnected: TCrossWebSocketClientDisconnectedEvent;
     fOnError: TCrossWebSocketErrorEvent;
     fOnHandleMessage: TCrossWebSocketServerHandleMessageEvent;
 
-    // Property setters
     procedure SetActive(const Value: Boolean);
     procedure SetPort(const Value: Integer);
     procedure SetIoThreads(const Value: Integer);
     procedure SetBindInterface(const Value: string);
+    procedure SetUseMessageFraming(const Value: Boolean);
+    procedure SetMaxMessageSize(const Value: Integer);
 
-    // MINIMAL helpers
     procedure DoError(const ErrorMsg: string);
-    function GenerateClientID: TClientID;
-    function AddConnection(const Connection: ICrossWebSocketConnection): TClientID; // RETURN CLIENT ID!
+    function GenerateClientID: Int64;
+    function AddConnection(const Connection: ICrossWebSocketConnection): Int64;
     procedure RemoveConnection(const Connection: ICrossWebSocketConnection);
-    function FindClientID(const Connection: ICrossWebSocketConnection): TClientID;
+    function FindClientID(const Connection: ICrossWebSocketConnection): Int64;
+
+    // **Message framing helpers**
+    function CreateMessageFrame(const aCmd: Int64; const Data: TBytes): TBytes;
+    procedure ProcessReceivedData(ClientID: Int64; const Data: TBytes);
+    procedure ResetReceiveBuffer(var Buffer: TReceiveBuffer);
 
   protected
     procedure InternalStart;
@@ -91,40 +96,32 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    // MINIMAL methods - OPTIMIZED FOR PERFORMANCE
     function Start: Boolean;
     procedure Stop;
-
-    // SINGLE CLIENT SEND - ASYNC ONLY - TBYTES ONLY!
-    function SendCommand(const ClientID: TClientID; const Data: TBytes): Boolean;
-
-    // BROADCASTING - ASYNC ONLY - OPTIMIZED FOR 100K CONNECTIONS - TBYTES ONLY!
-    function BroadcastCommand(const Data: TBytes): Boolean;
-
-    // CLIENT MANAGEMENT
-    function GetClientIDs: TArray<TClientID>;
-    function IsClientConnected(const ClientID: TClientID): Boolean;
-    function GetClientConnection(const ClientID: TClientID): ICrossWebSocketConnection;
-
-    // UTILITY METHODS
+    function SendCommandToClient(ClientID: Int64; const aCmd: Int64; const aData: TBytes): Boolean;
+    procedure BroadcastCommand(const aCmd: Int64; const aData: TBytes);
+    function GetClientIDs: TArray<Int64>;
+    function IsClientConnected(ClientID: Int64): Boolean;
+    function GetClientConnection(ClientID: Int64): ICrossWebSocketConnection;
     function IsActive: Boolean;
     function GetLastError: string;
     function GetClientCount: Integer;
-    function GetConnectionCount: Integer; // Actual connection list count
+    function GetConnectionCount: Integer;
 
   published
-    // MINIMAL properties - OPTIMIZED FOR 100K CONNECTIONS
     property Port: Integer read fPort write SetPort default 8080;
     property Active: Boolean read fActive write SetActive default False;
-    property IoThreads: Integer read fIoThreads write SetIoThreads default 64; // OPTIMIZED FOR 100K!
+    property IoThreads: Integer read fIoThreads write SetIoThreads default 64;
     property BindInterface: string read fBindInterface write SetBindInterface;
 
-    // State (read-only)
+    // **Message framing properties**
+    property UseMessageFraming: Boolean read fUseMessageFraming write SetUseMessageFraming default True;
+    property MaxMessageSize: Integer read fMaxMessageSize write SetMaxMessageSize default 104857600; // 100MB
+
     property ServerState: TCrossWebSocketServerState read fServerState;
     property ClientCount: Integer read fClientCount;
     property ConnectionCount: Integer read GetConnectionCount;
 
-    // MINIMAL events
     property OnClientConnected: TCrossWebSocketClientConnectedEvent read fOnClientConnected write fOnClientConnected;
     property OnClientDisconnected: TCrossWebSocketClientDisconnectedEvent read fOnClientDisconnected write fOnClientDisconnected;
     property OnError: TCrossWebSocketErrorEvent read fOnError write fOnError;
@@ -136,7 +133,11 @@ procedure Register;
 implementation
 
 uses
-  Windows; // For InterlockedIncrement/Decrement
+  Windows;
+
+const
+  MESSAGE_HEADER_SIZE = 4; // 4 bytes for message length
+  COMMAND_ID_SIZE = 8;     // 8 bytes for command ID (Int64)
 
 { TCrossSocketWebSocketServer }
 
@@ -144,72 +145,58 @@ constructor TCrossSocketWebSocketServer.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  // MINIMAL initialization - OPTIMIZED FOR 100K CONNECTIONS
   fPort := 8080;
   fActive := False;
   fClientCount := 0;
-  fNextClientID := 0;
-  fIoThreads := 64; // OPTIMIZED IO THREADS FOR 100K CONCURRENT CONNECTIONS
+  fNextClientID := 1;
+  fIoThreads := 64;
   fBindInterface := '0.0.0.0';
   fServerState := ssIdle;
 
-  // HIGH-PERFORMANCE connection tracking with Client ID support + REVERSE LOOKUP
+  // **Message framing defaults**
+  fUseMessageFraming := True;
+  fMaxMessageSize := 104857600; // 100MB
+
   fConnections := TList<TClientConnectionInfo>.Create;
-  fClientLookup := TDictionary<TClientID, ICrossWebSocketConnection>.Create;
-  fConnectionToClientID := TDictionary<ICrossWebSocketConnection, TClientID>.Create; // CRITICAL FIX!
+  fClientLookup := TDictionary<Int64, ICrossWebSocketConnection>.Create;
+  fConnectionToClientID := TDictionary<ICrossWebSocketConnection, Int64>.Create;
   fConnectionsLock := TCriticalSection.Create;
 
-  // Create Cross Socket WebSocket Server with MAXIMUM threads for 100K connections
   fWebSocketServer := TCrossWebSocketServer.Create(fIoThreads, False);
 
-  // Set up MINIMAL event handlers - ZERO OVERHEAD!
   fWebSocketServer
     .OnOpen(
       procedure(const AConnection: ICrossWebSocketConnection)
       var
-        ClientID: TClientID;
+        ClientID: Int64;
       begin
-        // PROPER client ID assignment and tracking - CRITICAL FIX!
         ClientID := AddConnection(AConnection);
-
-        // ATOMIC increment - NO LOCKING!
         InterlockedIncrement(fClientCount);
 
-        // Fire event if assigned
         if Assigned(fOnClientConnected) then
           fOnClientConnected(Self, ClientID, AConnection);
       end)
     .OnMessage(
       procedure(const AConnection: ICrossWebSocketConnection; const ARequestType: TWsMessageType; const ARequestData: TBytes)
       var
-        ClientID: TClientID;
+        ClientID: Int64;
       begin
-        // FAST lookup using reverse dictionary - CRITICAL FIX!
         ClientID := FindClientID(AConnection);
-
-        // DIRECT message processing - NO OVERHEAD!
-        if Assigned(fOnHandleMessage) then
-          fOnHandleMessage(Self, ClientID, AConnection, ARequestData);
+        if ClientID > 0 then
+          ProcessReceivedData(ClientID, ARequestData);
       end)
     .OnClose(
       procedure(const AConnection: ICrossWebSocketConnection)
       var
-        ClientID: TClientID;
+        ClientID: Int64;
       begin
-        // Find client ID before removing - CRITICAL FIX!
         ClientID := FindClientID(AConnection);
-
-        // Remove from connection tracking FIRST
         RemoveConnection(AConnection);
-
-        // ATOMIC decrement - NO LOCKING!
         InterlockedDecrement(fClientCount);
 
-        // Safety check
         if fClientCount < 0 then
           fClientCount := 0;
 
-        // Fire event if assigned
         if Assigned(fOnClientDisconnected) then
           fOnClientDisconnected(Self, ClientID, AConnection);
       end);
@@ -231,7 +218,6 @@ begin
       end;
     end;
 
-    // Cleanup connection tracking
     if fConnectionsLock <> nil then
     begin
       fConnectionsLock.Enter;
@@ -257,63 +243,268 @@ begin
       FreeAndNil(fConnectionsLock);
     end;
   except
-    // Ignore cleanup errors
   end;
   inherited Destroy;
 end;
 
 // =============================================================================
-// CLIENT ID MANAGEMENT - OPTIMIZED FOR 100K CONNECTIONS - CRITICAL FIXES!
+// **MESSAGE FRAMING WITH COMMAND ID IMPLEMENTATION**
 // =============================================================================
 
-function TCrossSocketWebSocketServer.GenerateClientID: TClientID;
+procedure TCrossSocketWebSocketServer.ResetReceiveBuffer(var Buffer: TReceiveBuffer);
 begin
-  Result := IntToStr(InterlockedIncrement(fNextClientID));
+  SetLength(Buffer.Buffer, 0);
+  Buffer.ExpectedLength := 0;
+  Buffer.CurrentLength := 0;
+  Buffer.HeaderReceived := False;
 end;
 
-function TCrossSocketWebSocketServer.FindClientID(const Connection: ICrossWebSocketConnection): TClientID;
+function TCrossSocketWebSocketServer.CreateMessageFrame(const aCmd: Int64; const Data: TBytes): TBytes;
+var
+  DataLen: Cardinal;
+  TotalLen: Cardinal;
 begin
-  Result := '';
-  if (Connection = nil) or (fConnectionToClientID = nil) then
+  if not fUseMessageFraming then
+  begin
+    // Without framing, just send cmdID + data
+    SetLength(Result, COMMAND_ID_SIZE + Length(Data));
+    PInt64(@Result[0])^ := aCmd;
+    if Length(Data) > 0 then
+      Move(Data[0], Result[COMMAND_ID_SIZE], Length(Data));
     Exit;
+  end;
+
+  // Calculate total payload size (cmdID + data)
+  DataLen := COMMAND_ID_SIZE + Length(Data);
+  TotalLen := MESSAGE_HEADER_SIZE + DataLen;
+
+  SetLength(Result, TotalLen);
+
+  // Write length header (4 bytes, little-endian) - total payload size
+  PCardinal(@Result[0])^ := DataLen;
+
+  // Write command ID (8 bytes)
+  PInt64(@Result[MESSAGE_HEADER_SIZE])^ := aCmd;
+
+  // Copy data
+  if Length(Data) > 0 then
+    Move(Data[0], Result[MESSAGE_HEADER_SIZE + COMMAND_ID_SIZE], Length(Data));
+end;
+
+procedure TCrossSocketWebSocketServer.ProcessReceivedData(ClientID: Int64; const Data: TBytes);
+var
+  clientInfo: TClientConnectionInfo;
+  dataOffset: Integer;
+  bytesToCopy: Integer;
+  completeMessage: TBytes;
+  expectedLen: Cardinal;
+  cmdID: Int64;
+  cmdData: TBytes;
+  I: Integer;
+  found: Boolean;
+begin
+  if not fUseMessageFraming then
+  begin
+    // No framing - extract cmdID and data directly
+    if Length(Data) < COMMAND_ID_SIZE then
+    begin
+      DoError(Format('Client #%d sent message too short - missing command ID', [ClientID]));
+      Exit;
+    end;
+
+    cmdID := PInt64(@Data[0])^;
+    SetLength(cmdData, Length(Data) - COMMAND_ID_SIZE);
+    if Length(cmdData) > 0 then
+      Move(Data[COMMAND_ID_SIZE], cmdData[0], Length(cmdData));
+
+    if Assigned(fOnHandleMessage) then
+    begin
+      fConnectionsLock.Enter;
+      try
+        if fClientLookup.TryGetValue(ClientID, clientInfo.Connection) then
+          fOnHandleMessage(Self, ClientID, clientInfo.Connection, cmdID, cmdData);
+      finally
+        fConnectionsLock.Leave;
+      end;
+    end;
+    Exit;
+  end;
 
   fConnectionsLock.Enter;
   try
-    // FAST reverse lookup - CRITICAL FIX!
-    fConnectionToClientID.TryGetValue(Connection, Result);
+    found := False;
+    for I := 0 to fConnections.Count - 1 do
+    begin
+      if fConnections[I].ClientID = ClientID then
+      begin
+        clientInfo := fConnections[I];
+        found := True;
+        Break;
+      end;
+    end;
+
+    if not found then
+      Exit;
+
+    dataOffset := 0;
+
+    while dataOffset < Length(Data) do
+    begin
+      // Step 1: Read header if not received yet
+      if not clientInfo.ReceiveBuffer.HeaderReceived then
+      begin
+        bytesToCopy := MESSAGE_HEADER_SIZE - clientInfo.ReceiveBuffer.CurrentLength;
+        if bytesToCopy > (Length(Data) - dataOffset) then
+          bytesToCopy := Length(Data) - dataOffset;
+
+        if Length(clientInfo.ReceiveBuffer.Buffer) < MESSAGE_HEADER_SIZE then
+          SetLength(clientInfo.ReceiveBuffer.Buffer, MESSAGE_HEADER_SIZE);
+
+        Move(Data[dataOffset], clientInfo.ReceiveBuffer.Buffer[clientInfo.ReceiveBuffer.CurrentLength], bytesToCopy);
+        Inc(clientInfo.ReceiveBuffer.CurrentLength, bytesToCopy);
+        Inc(dataOffset, bytesToCopy);
+
+        // Check if header complete
+        if clientInfo.ReceiveBuffer.CurrentLength = MESSAGE_HEADER_SIZE then
+        begin
+          expectedLen := PCardinal(@clientInfo.ReceiveBuffer.Buffer[0])^;
+
+          // Validate message size (must be at least cmdID size)
+          if (expectedLen < COMMAND_ID_SIZE) or (expectedLen > Cardinal(fMaxMessageSize)) then
+          begin
+            DoError(Format('Client #%d sent invalid message size: %d bytes', [ClientID, expectedLen]));
+            ResetReceiveBuffer(clientInfo.ReceiveBuffer);
+            for I := 0 to fConnections.Count - 1 do
+            begin
+              if fConnections[I].ClientID = ClientID then
+              begin
+                fConnections[I] := clientInfo;
+                Break;
+              end;
+            end;
+            Exit;
+          end;
+
+          clientInfo.ReceiveBuffer.HeaderReceived := True;
+          clientInfo.ReceiveBuffer.ExpectedLength := expectedLen;
+          clientInfo.ReceiveBuffer.CurrentLength := 0;
+          SetLength(clientInfo.ReceiveBuffer.Buffer, expectedLen);
+        end;
+      end
+      // Step 2: Read message body
+      else
+      begin
+        bytesToCopy := clientInfo.ReceiveBuffer.ExpectedLength - clientInfo.ReceiveBuffer.CurrentLength;
+        if bytesToCopy > (Length(Data) - dataOffset) then
+          bytesToCopy := Length(Data) - dataOffset;
+
+        Move(Data[dataOffset], clientInfo.ReceiveBuffer.Buffer[clientInfo.ReceiveBuffer.CurrentLength], bytesToCopy);
+        Inc(clientInfo.ReceiveBuffer.CurrentLength, bytesToCopy);
+        Inc(dataOffset, bytesToCopy);
+
+        // Check if message complete
+        if clientInfo.ReceiveBuffer.CurrentLength = clientInfo.ReceiveBuffer.ExpectedLength then
+        begin
+          // Extract complete message
+          SetLength(completeMessage, clientInfo.ReceiveBuffer.ExpectedLength);
+          Move(clientInfo.ReceiveBuffer.Buffer[0], completeMessage[0], clientInfo.ReceiveBuffer.ExpectedLength);
+
+          // Reset buffer for next message
+          ResetReceiveBuffer(clientInfo.ReceiveBuffer);
+
+          // Update client info
+          for I := 0 to fConnections.Count - 1 do
+          begin
+            if fConnections[I].ClientID = ClientID then
+            begin
+              fConnections[I] := clientInfo;
+              Break;
+            end;
+          end;
+
+          // Extract cmdID (first 8 bytes)
+          cmdID := PInt64(@completeMessage[0])^;
+
+          // Extract data (remaining bytes)
+          SetLength(cmdData, Length(completeMessage) - COMMAND_ID_SIZE);
+          if Length(cmdData) > 0 then
+            Move(completeMessage[COMMAND_ID_SIZE], cmdData[0], Length(cmdData));
+
+          // Fire OnHandleMessage with ClientID, cmdID and data
+          if Assigned(fOnHandleMessage) then
+            fOnHandleMessage(Self, ClientID, clientInfo.Connection, cmdID, cmdData);
+
+          // Continue processing remaining data
+          Continue;
+        end;
+      end;
+    end;
+
+    // Save updated buffer state
+    for I := 0 to fConnections.Count - 1 do
+    begin
+      if fConnections[I].ClientID = ClientID then
+      begin
+        fConnections[I] := clientInfo;
+        Break;
+      end;
+    end;
+
   finally
     fConnectionsLock.Leave;
   end;
 end;
 
 // =============================================================================
-// CONNECTION MANAGEMENT - OPTIMIZED FOR 100K CONNECTIONS - CRITICAL FIXES!
+// CLIENT ID MANAGEMENT
 // =============================================================================
 
-function TCrossSocketWebSocketServer.AddConnection(const Connection: ICrossWebSocketConnection): TClientID;
+function TCrossSocketWebSocketServer.GenerateClientID: Int64;
+begin
+  Result := InterlockedIncrement64(fNextClientID);
+end;
+
+function TCrossSocketWebSocketServer.FindClientID(const Connection: ICrossWebSocketConnection): Int64;
+begin
+  Result := 0;
+  if (Connection = nil) or (fConnectionToClientID = nil) then
+    Exit;
+
+  fConnectionsLock.Enter;
+  try
+    if not fConnectionToClientID.TryGetValue(Connection, Result) then
+      Result := 0;
+  finally
+    fConnectionsLock.Leave;
+  end;
+end;
+
+// =============================================================================
+// CONNECTION MANAGEMENT
+// =============================================================================
+
+function TCrossSocketWebSocketServer.AddConnection(const Connection: ICrossWebSocketConnection): Int64;
 var
   ClientInfo: TClientConnectionInfo;
 begin
-  Result := '';
+  Result := 0;
   if (Connection = nil) or (fConnections = nil) then
     Exit;
 
   fConnectionsLock.Enter;
   try
-    // Check if connection already exists in reverse lookup
     if fConnectionToClientID.TryGetValue(Connection, Result) then
-      Exit; // Already exists, return existing client ID
+      Exit;
 
-    // Generate new client ID
     Result := GenerateClientID;
 
-    // Add to all tracking structures - CRITICAL FIX!
     ClientInfo.ClientID := Result;
     ClientInfo.Connection := Connection;
+    ResetReceiveBuffer(ClientInfo.ReceiveBuffer);
 
     fConnections.Add(ClientInfo);
     fClientLookup.Add(Result, Connection);
-    fConnectionToClientID.Add(Connection, Result); // REVERSE LOOKUP - CRITICAL!
+    fConnectionToClientID.Add(Connection, Result);
   finally
     fConnectionsLock.Leave;
   end;
@@ -322,24 +513,20 @@ end;
 procedure TCrossSocketWebSocketServer.RemoveConnection(const Connection: ICrossWebSocketConnection);
 var
   I: Integer;
-  ClientID: TClientID;
+  ClientID: Int64;
 begin
   if (Connection = nil) or (fConnections = nil) then
     Exit;
 
   fConnectionsLock.Enter;
   try
-    // Get client ID from reverse lookup first - CRITICAL FIX!
     if fConnectionToClientID.TryGetValue(Connection, ClientID) then
     begin
-      // Remove from reverse lookup
       fConnectionToClientID.Remove(Connection);
 
-      // Remove from client lookup
       if fClientLookup.ContainsKey(ClientID) then
         fClientLookup.Remove(ClientID);
 
-      // Remove from connections list
       for I := fConnections.Count - 1 downto 0 do
       begin
         if fConnections[I].Connection = Connection then
@@ -355,7 +542,7 @@ begin
 end;
 
 // =============================================================================
-// CORE METHODS - MINIMAL IMPLEMENTATION - OPTIMIZED FOR 100K CONNECTIONS
+// CORE METHODS
 // =============================================================================
 
 function TCrossSocketWebSocketServer.Start: Boolean;
@@ -381,20 +568,18 @@ begin
   try
     fServerState := ssListening;
     fLastError := '';
-    fClientCount := 0; // Reset counter
-    fNextClientID := 0; // Reset client ID counter
+    fClientCount := 0;
+    fNextClientID := 0;
 
-    // Clear ALL connection tracking structures - CRITICAL FIX!
     fConnectionsLock.Enter;
     try
       fConnections.Clear;
       fClientLookup.Clear;
-      fConnectionToClientID.Clear; // CRITICAL!
+      fConnectionToClientID.Clear;
     finally
       fConnectionsLock.Leave;
     end;
 
-    // Start WebSocket server - OPTIMIZED FOR 100K CONNECTIONS
     fWebSocketServer.Addr := fBindInterface;
     fWebSocketServer.Port := fPort;
     fWebSocketServer.Start;
@@ -429,16 +614,14 @@ begin
     try
       fWebSocketServer.Stop;
     except
-      // Ignore shutdown errors
     end;
   end;
 
-  // Clear ALL connections - CRITICAL FIX!
   fConnectionsLock.Enter;
   try
     fConnections.Clear;
     fClientLookup.Clear;
-    fConnectionToClientID.Clear; // CRITICAL!
+    fConnectionToClientID.Clear;
   finally
     fConnectionsLock.Leave;
   end;
@@ -449,24 +632,24 @@ begin
 end;
 
 // =============================================================================
-// SINGLE CLIENT SEND - ASYNC ONLY - TBYTES ONLY!
+// SEND METHODS
 // =============================================================================
 
-function TCrossSocketWebSocketServer.SendCommand(const ClientID: TClientID; const Data: TBytes): Boolean;
+function TCrossSocketWebSocketServer.SendCommandToClient(ClientID: Int64; const aCmd: Int64; const aData: TBytes): Boolean;
 begin
   Result := True;
-  if (fWebSocketServer = nil) or not fActive or (ClientID = '') then
+  if (fWebSocketServer = nil) or not fActive or (ClientID = 0) then
   begin
     Result := False;
     Exit;
   end;
 
   try
-    // ASYNC - Fire and forget - non-blocking
     TThread.CreateAnonymousThread(
       procedure
       var
         Connection: ICrossWebSocketConnection;
+        framedData: TBytes;
       begin
         fConnectionsLock.Enter;
         try
@@ -475,13 +658,13 @@ begin
             if Connection <> nil then
             begin
               try
-                // DIRECT send - NO OVERHEAD - OPTIMIZED FOR 100K CONNECTIONS
-                Connection.WsSend(Data);
+                framedData := CreateMessageFrame(aCmd, aData);
+                Connection.WsSend(framedData);
               except
                 on E: Exception do
                 begin
                   fLastError := E.Message;
-                  DoError('Send to client ' + ClientID + ' failed: ' + E.Message);
+                  DoError('Send to client #' + IntToStr(ClientID) + ' failed: ' + E.Message);
                 end;
               end;
             end;
@@ -495,29 +678,22 @@ begin
   end;
 end;
 
-// =============================================================================
-// BROADCASTING - ASYNC ONLY - OPTIMIZED FOR 100K CONNECTIONS - TBYTES ONLY!
-// =============================================================================
-
-function TCrossSocketWebSocketServer.BroadcastCommand(const Data: TBytes): Boolean;
+procedure TCrossSocketWebSocketServer.BroadcastCommand(const aCmd: Int64; const aData: TBytes);
 begin
-  Result := True;
   if (fWebSocketServer = nil) or not fActive or (fConnections = nil) then
-  begin
-    Result := False;
     Exit;
-  end;
 
   try
-    // ASYNC - Fire and forget - non-blocking
     TThread.CreateAnonymousThread(
       procedure
       var
         ConnectionsCopy: TArray<ICrossWebSocketConnection>;
         Connection: ICrossWebSocketConnection;
+        framedData: TBytes;
         I: Integer;
       begin
-        // FAST: Copy connection list once under lock
+        framedData := CreateMessageFrame(aCmd, aData);
+
         fConnectionsLock.Enter;
         try
           SetLength(ConnectionsCopy, fConnections.Count);
@@ -527,29 +703,26 @@ begin
           fConnectionsLock.Leave;
         end;
 
-        // FAST: Broadcast without any locking
         for Connection in ConnectionsCopy do
         begin
           if Connection <> nil then
           begin
             try
-              Connection.WsSend(Data);
+              Connection.WsSend(framedData);
             except
-              // Ignore individual send failures - keeps broadcasting fast
             end;
           end;
         end;
       end).Start;
   except
-    Result := False;
   end;
 end;
 
 // =============================================================================
-// CLIENT MANAGEMENT METHODS
+// CLIENT MANAGEMENT
 // =============================================================================
 
-function TCrossSocketWebSocketServer.GetClientIDs: TArray<TClientID>;
+function TCrossSocketWebSocketServer.GetClientIDs: TArray<Int64>;
 var
   I: Integer;
 begin
@@ -569,9 +742,9 @@ begin
   end;
 end;
 
-function TCrossSocketWebSocketServer.IsClientConnected(const ClientID: TClientID): Boolean;
+function TCrossSocketWebSocketServer.IsClientConnected(ClientID: Int64): Boolean;
 begin
-  if (fClientLookup = nil) or (ClientID = '') then
+  if (fClientLookup = nil) or (ClientID = 0) then
   begin
     Result := False;
     Exit;
@@ -585,10 +758,10 @@ begin
   end;
 end;
 
-function TCrossSocketWebSocketServer.GetClientConnection(const ClientID: TClientID): ICrossWebSocketConnection;
+function TCrossSocketWebSocketServer.GetClientConnection(ClientID: Int64): ICrossWebSocketConnection;
 begin
   Result := nil;
-  if (fClientLookup = nil) or (ClientID = '') then
+  if (fClientLookup = nil) or (ClientID = 0) then
     Exit;
 
   fConnectionsLock.Enter;
@@ -635,7 +808,7 @@ begin
 end;
 
 // =============================================================================
-// PROPERTY SETTERS - OPTIMIZED FOR 100K CONNECTIONS
+// PROPERTY SETTERS
 // =============================================================================
 
 procedure TCrossSocketWebSocketServer.SetActive(const Value: Boolean);
@@ -673,6 +846,20 @@ end;
 procedure TCrossSocketWebSocketServer.SetBindInterface(const Value: string);
 begin
   fBindInterface := Value;
+end;
+
+procedure TCrossSocketWebSocketServer.SetUseMessageFraming(const Value: Boolean);
+begin
+  if fActive then
+    raise Exception.Create('Cannot change UseMessageFraming while server is active');
+  fUseMessageFraming := Value;
+end;
+
+procedure TCrossSocketWebSocketServer.SetMaxMessageSize(const Value: Integer);
+begin
+  if Value < 1024 then
+    raise Exception.Create('MaxMessageSize must be at least 1024 bytes');
+  fMaxMessageSize := Value;
 end;
 
 procedure TCrossSocketWebSocketServer.DoError(const ErrorMsg: string);

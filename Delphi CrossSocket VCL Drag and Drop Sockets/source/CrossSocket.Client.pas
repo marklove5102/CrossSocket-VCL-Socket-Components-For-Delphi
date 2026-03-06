@@ -14,29 +14,35 @@ uses
   Net.SocketAPI;
 
 type
-  // **FIXED: HUMAN-FRIENDLY STATE CONSTANTS THAT ACTUALLY WORK!**
   TCrossSocketConnectionState = (
-    csUnknown,          // 0 - Unknown/Initial state
-    csConnecting,       // 1 - Currently connecting
-    csHandshaking,      // 2 - Performing handshake/negotiation
-    csConnected,        // 3 - Successfully connected
-    csDisconnecting,    // 4 - Currently disconnecting
-    csDisconnected,     // 5 - Disconnected (clean)
-    csClosed,           // 6 - Connection closed (with error)
-    csError             // 7 - Error state
+    csUnknown,
+    csConnecting,
+    csHandshaking,
+    csConnected,
+    csDisconnecting,
+    csDisconnected,
+    csClosed,
+    csError
   );
 
   TCrossSocketReconnectStrategy = (rsLinear, rsExponential);
 
-  // Event types - simplified
+  // **Receive buffer for message reassembly**
+  TReceiveBuffer = record
+    Buffer: TBytes;
+    ExpectedLength: Integer;
+    CurrentLength: Integer;
+    HeaderReceived: Boolean;
+  end;
+
+  // Event types
   TCrossSocketConnectEvent = procedure(Sender: TObject) of object;
   TCrossSocketDataReceivedEvent = procedure(Sender: TObject; const Data: TBytes) of object;
   TCrossSocketDataSentEvent = procedure(Sender: TObject; const Data: TBytes) of object;
   TCrossSocketDisconnectEvent = procedure(Sender: TObject) of object;
   TCrossSocketErrorEvent = procedure(Sender: TObject; const ErrorMsg: string) of object;
-  TCrossSocketHandleCommandEvent = procedure(Sender: TObject; const Command: TBytes) of object;
+  TCrossSocketHandleCommandEvent = procedure(Sender: TObject; ClientID: Int64; const aCmd: Int64; const aData: TBytes) of object;
 
-  // **FIXED**: Use our own state change event with our enum!
   TCrossSocketStateChangeEvent = procedure(Sender: TObject;
     OldState, NewState: TCrossSocketConnectionState;
     const StateDescription: string) of object;
@@ -44,7 +50,7 @@ type
   TCrossSocketReconnectingEvent = procedure(Sender: TObject; AttemptNumber: Integer) of object;
   TCrossSocketReconnectFailedEvent = procedure(Sender: TObject; AttemptNumber: Integer; const ErrorMsg: string) of object;
 
-  /// Cross Socket Client Component - BASIC VERSION, NO ENCRYPTION
+  /// Cross Socket Client Component - WITH MESSAGE FRAMING AND COMMAND ID!
   TCrossSocketClient = class(TComponent)
   private
     // Core Cross Socket objects
@@ -59,6 +65,11 @@ type
     fConnecting: Boolean;
     fLastError: string;
     fCurrentState: TCrossSocketConnectionState;
+
+    // **Message framing**
+    fUseMessageFraming: Boolean;
+    fMaxMessageSize: Integer;
+    fReceiveBuffer: TReceiveBuffer;
 
     // Additional properties
     fActive: Boolean;
@@ -86,23 +97,27 @@ type
     fMaxReconnectAttempts: Integer;
     fReconnecting: Boolean;
     fUserDisconnected: Boolean;
-    fReconnectState: Boolean; // Track if we're in reconnect mode
+    fReconnectState: Boolean;
 
-    // EVENTS - OnDataReceived/OnDataSent are for STATISTICS ONLY!
+    // EVENTS
     fOnConnect: TCrossSocketConnectEvent;
-    fOnDataReceived: TCrossSocketDataReceivedEvent;  // FOR STATISTICS/LOGGING ONLY!
-    fOnDataSent: TCrossSocketDataSentEvent;  // FOR STATISTICS/LOGGING ONLY!
+    fOnDataReceived: TCrossSocketDataReceivedEvent;
+    fOnDataSent: TCrossSocketDataSentEvent;
     fOnDisconnect: TCrossSocketDisconnectEvent;
     fOnError: TCrossSocketErrorEvent;
-    fOnHandleCommand: TCrossSocketHandleCommandEvent;  // THIS IS WHERE YOU PROCESS DATA!
+    fOnHandleCommand: TCrossSocketHandleCommandEvent;
     fOnStateChange: TCrossSocketStateChangeEvent;
     fOnReconnecting: TCrossSocketReconnectingEvent;
     fOnReconnectFailed: TCrossSocketReconnectFailedEvent;
 
-    // **CRITICAL FIX**: Add flags to prevent duplicate event firing
     fInConnectEvent: Boolean;
     fInDisconnectEvent: Boolean;
     fInDataSentEvent: Boolean;
+
+    // **Message framing helpers**
+    function CreateMessageFrame(const aCmd: Int64; const Data: TBytes): TBytes;
+    procedure ProcessReceivedData(const Data: TBytes);
+    procedure ResetReceiveBuffer;
 
     // Property setters
     procedure SetActive(const Value: Boolean);
@@ -117,7 +132,6 @@ type
     procedure SetSendBufferSize(const Value: Integer);
     procedure SetThreadPoolSize(const Value: Integer);
     procedure SetVersion(const Value: string);
-
     procedure SetConnected(const Value: Boolean);
     procedure SetHost(const Value: string);
     procedure SetPort(const Value: Integer);
@@ -125,14 +139,15 @@ type
     procedure SetAutoReconnect(const Value: Boolean);
     procedure SetReconnectInterval(const Value: Integer);
     procedure SetMaxReconnectAttempts(const Value: Integer);
+    procedure SetUseMessageFraming(const Value: Boolean);
+    procedure SetMaxMessageSize(const Value: Integer);
 
-    // Helper methods for state management
     function GetConnectionStateDescription: string;
 
     procedure DoError(const ErrorMsg: string);
     procedure DoDataReceived(const Data: TBytes);
     procedure DoDataSent(const Data: TBytes);
-    procedure DoHandleCommand(const Command: TBytes);
+    procedure DoHandleCommand(const aCmd: Int64; const aData: TBytes);
     procedure DoConnect;
     procedure DoDisconnect;
     procedure DoStateChange(NewState: TCrossSocketConnectionState);
@@ -159,102 +174,64 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    /// Connect to Cross Socket server (async - non-blocking)
     function Connect: Boolean;
-    /// Connect to Cross Socket server (sync - blocking, for compatibility)
     function ConnectSync: Boolean;
-    /// Disconnect from Cross Socket server
     procedure Disconnect;
-    /// Send command to server - BASIC: no encryption
-    function SendCommand(const Command: TBytes): Boolean;
-    /// Check if currently connected
+    function SendCommand(const aCmd: Int64; const aData: TBytes): Boolean;
     function IsConnected: Boolean;
-    /// Check if currently attempting to connect
     function IsConnecting: Boolean;
-    /// Check if currently attempting to reconnect
     function IsReconnecting: Boolean;
-    /// Get last error message
     function GetLastError: string;
-    /// Get current reconnection attempt count
     function GetReconnectAttempts: Integer;
-    /// Reset reconnection attempt counter
     procedure ResetReconnectAttempts;
-    /// Get total bytes received
     function GetTotalBytesReceived: Int64;
-    /// Get total bytes sent
     function GetTotalBytesSent: Int64;
-    /// Reset byte counters
     procedure ResetByteCounters;
-    /// Get the server's hostname/IP address
     function GetServerIP: string;
-    /// Get current connection state as string
     function GetConnectionStateAsString: string;
 
   published
-    /// Active state (alternative to Connected)
     property Active: Boolean read fActive write SetActive default False;
-    /// Server hostname or IP address
     property Host: string read fHost write SetHost;
-    /// Server port number
     property Port: Integer read fPort write SetPort default 80;
-    /// Cross Socket URI path (for compatibility)
     property URI: string read fURI write SetURI;
-    /// Connection state
     property Connected: Boolean read fConnected write SetConnected default False;
-    /// Connection timeout in milliseconds
     property ConnectionTimeout: Integer read fConnectionTimeout write SetConnectionTimeout default 30000;
-    /// Component description
     property Description: string read fDescription write SetDescription;
 
-    /// Enable keep-alive
+    // **Message framing properties**
+    property UseMessageFraming: Boolean read fUseMessageFraming write SetUseMessageFraming default True;
+    property MaxMessageSize: Integer read fMaxMessageSize write SetMaxMessageSize default 104857600; // 100MB default
+
     property KeepAlive: Boolean read fKeepAlive write SetKeepAlive default True;
-    /// Logging level (0=none, 1=errors, 2=info, 3=debug)
     property LogLevel: Integer read fLogLevel write SetLogLevel default 1;
-    /// Component name
     property Name: string read fName write SetName;
-    /// TCP No Delay option
     property NoDelay: Boolean read fNoDelay write SetNoDelay default True;
-    /// Receive buffer size in bytes
     property ReceiveBufferSize: Integer read fReceiveBufferSize write SetReceiveBufferSize default 8192;
-    /// Thread pool size
     property ThreadPoolSize: Integer read fThreadPoolSize write SetThreadPoolSize default 4;
-    /// Component version
     property Version: string read fVersion write SetVersion;
-    /// Send buffer size in bytes
     property SendBufferSize: Integer read fSendBufferSize write SetSendBufferSize default 8192;
 
-    /// Read-only connecting state
     property Connecting: Boolean read fConnecting;
-    /// Enable automatic reconnection on connection loss
     property AutoReconnect: Boolean read fAutoReconnect write SetAutoReconnect default False;
-    /// Interval in milliseconds between reconnection attempts
     property ReconnectInterval: Integer read fReconnectInterval write SetReconnectInterval default 5000;
-    /// Maximum number of reconnection attempts (0 = unlimited)
     property MaxReconnectAttempts: Integer read fMaxReconnectAttempts write SetMaxReconnectAttempts default 0;
-    /// Reconnection strategy
     property ReconnectStrategy: TCrossSocketReconnectStrategy read fReconnectStrategy write SetReconnectStrategy default rsLinear;
-    /// Read-only reconnecting state
     property Reconnecting: Boolean read fReconnecting;
-    /// Read-only message received flag
     property MessageReceived: Boolean read fMessageReceived;
-    /// Read-only message sent flag
     property MessageSent: Boolean read fMessageSent;
-    /// Read-only total bytes received
     property TotalBytesReceived: Int64 read fTotalBytesReceived;
-    /// Read-only total bytes sent
     property TotalBytesSent: Int64 read fTotalBytesSent;
-    /// Read-only current connection state
     property ConnectionState: TCrossSocketConnectionState read fCurrentState;
-    /// Read-only connection state description
     property ConnectionStateDescription: string read GetConnectionStateDescription;
 
-    // EVENTS - OnDataReceived/OnDataSent are for STATISTICS ONLY!
+    // EVENTS
     property OnConnect: TCrossSocketConnectEvent read fOnConnect write fOnConnect;
-    property OnDataReceived: TCrossSocketDataReceivedEvent read fOnDataReceived write fOnDataReceived;  // FOR STATISTICS/LOGGING ONLY!
-    property OnDataSent: TCrossSocketDataSentEvent read fOnDataSent write fOnDataSent;  // FOR STATISTICS/LOGGING ONLY!
+    property OnDataReceived: TCrossSocketDataReceivedEvent read fOnDataReceived write fOnDataReceived;
+    property OnDataSent: TCrossSocketDataSentEvent read fOnDataSent write fOnDataSent;
     property OnDisconnect: TCrossSocketDisconnectEvent read fOnDisconnect write fOnDisconnect;
     property OnError: TCrossSocketErrorEvent read fOnError write fOnError;
-    property OnHandleCommand: TCrossSocketHandleCommandEvent read fOnHandleCommand write fOnHandleCommand;  // THIS IS WHERE YOU PROCESS DATA!
+    property OnHandleCommand: TCrossSocketHandleCommandEvent read fOnHandleCommand write fOnHandleCommand;
     property OnStateChange: TCrossSocketStateChangeEvent read fOnStateChange write fOnStateChange;
     property OnReconnecting: TCrossSocketReconnectingEvent read fOnReconnecting write fOnReconnecting;
     property OnReconnectFailed: TCrossSocketReconnectFailedEvent read fOnReconnectFailed write fOnReconnectFailed;
@@ -264,13 +241,16 @@ procedure Register;
 
 implementation
 
+const
+  MESSAGE_HEADER_SIZE = 4; // 4 bytes for message length
+  COMMAND_ID_SIZE = 8;     // 8 bytes for command ID (Int64)
+
 { TCrossSocketClient }
 
 constructor TCrossSocketClient.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  // **CRITICAL FIX**: Initialize event flags
   fInConnectEvent := False;
   fInDisconnectEvent := False;
   fInDataSentEvent := False;
@@ -284,10 +264,15 @@ begin
   fConnection := nil;
   fCurrentState := csUnknown;
 
+  // **Message framing defaults**
+  fUseMessageFraming := True;
+  fMaxMessageSize := 104857600; // 100MB
+  ResetReceiveBuffer;
+
   // Initialize properties
   fActive := False;
   fConnectionTimeout := 30000;
-  fDescription := 'Cross Socket Client Component - BASIC VERSION';
+  fDescription := 'Cross Socket Client Component - WITH MESSAGE FRAMING & COMMAND ID';
   fKeepAlive := True;
   fLogLevel := 1;
   fName := 'CrossClient1';
@@ -295,7 +280,7 @@ begin
   fReceiveBufferSize := 8192;
   fSendBufferSize := 8192;
   fThreadPoolSize := 4;
-  fVersion := '1.0.0';
+  fVersion := '2.1.0'; // Version bump for command ID
   fMessageReceived := False;
   fMessageSent := False;
   fTotalBytesReceived := 0;
@@ -315,7 +300,7 @@ begin
   fReconnectTimer.Enabled := False;
   fReconnectTimer.OnTimer := OnReconnectTimer;
 
-  // Create Cross Socket instance - REAL IMPLEMENTATION!
+  // Create Cross Socket instance
   fCrossSocket := TCrossSocket.Create(fThreadPoolSize);
   fCrossSocket.OnConnected := OnCrossSocketConnected;
   fCrossSocket.OnDisconnected := OnCrossSocketDisconnected;
@@ -326,20 +311,16 @@ end;
 destructor TCrossSocketClient.Destroy;
 begin
   try
-    // Stop reconnection timer first
     try
       StopReconnectTimer;
     except
-      // Ignore timer errors
     end;
 
-    // Force disconnect
     if fConnected or fConnecting then
     begin
       try
         InternalDisconnect;
       except
-        // Force cleanup even if disconnect fails
         fConnected := False;
         fConnecting := False;
         fReconnecting := False;
@@ -347,7 +328,6 @@ begin
       end;
     end;
 
-    // Cleanup Cross Socket
     if fCrossSocket <> nil then
     begin
       try
@@ -359,7 +339,6 @@ begin
     end;
 
   except
-    // Ignore ALL destructor errors - force cleanup
     fCrossSocket := nil;
     fConnection := nil;
   end;
@@ -368,7 +347,154 @@ begin
 end;
 
 // =============================================================================
-// **CRITICAL FIX**: FIXED CONNECTION METHODS - NO MORE DUPLICATE EVENTS
+// **MESSAGE FRAMING WITH COMMAND ID IMPLEMENTATION**
+// =============================================================================
+
+procedure TCrossSocketClient.ResetReceiveBuffer;
+begin
+  SetLength(fReceiveBuffer.Buffer, 0);
+  fReceiveBuffer.ExpectedLength := 0;
+  fReceiveBuffer.CurrentLength := 0;
+  fReceiveBuffer.HeaderReceived := False;
+end;
+
+function TCrossSocketClient.CreateMessageFrame(const aCmd: Int64; const Data: TBytes): TBytes;
+var
+  DataLen: Cardinal;
+  TotalLen: Cardinal;
+begin
+  if not fUseMessageFraming then
+  begin
+    // Without framing, just send cmdID + data
+    SetLength(Result, COMMAND_ID_SIZE + Length(Data));
+    PInt64(@Result[0])^ := aCmd;
+    if Length(Data) > 0 then
+      Move(Data[0], Result[COMMAND_ID_SIZE], Length(Data));
+    Exit;
+  end;
+
+  // Calculate total payload size (cmdID + data)
+  DataLen := COMMAND_ID_SIZE + Length(Data);
+  TotalLen := MESSAGE_HEADER_SIZE + DataLen;
+
+  SetLength(Result, TotalLen);
+
+  // Write length header (4 bytes, little-endian) - total payload size
+  PCardinal(@Result[0])^ := DataLen;
+
+  // Write command ID (8 bytes)
+  PInt64(@Result[MESSAGE_HEADER_SIZE])^ := aCmd;
+
+  // Copy data
+  if Length(Data) > 0 then
+    Move(Data[0], Result[MESSAGE_HEADER_SIZE + COMMAND_ID_SIZE], Length(Data));
+end;
+
+procedure TCrossSocketClient.ProcessReceivedData(const Data: TBytes);
+var
+  dataOffset: Integer;
+  bytesToCopy: Integer;
+  completeMessage: TBytes;
+  expectedLen: Cardinal;
+  cmdID: Int64;
+  cmdData: TBytes;
+begin
+  if not fUseMessageFraming then
+  begin
+    // No framing - extract cmdID and data directly
+    if Length(Data) < COMMAND_ID_SIZE then
+    begin
+      DoError('Message too short - missing command ID');
+      Exit;
+    end;
+
+    cmdID := PInt64(@Data[0])^;
+    SetLength(cmdData, Length(Data) - COMMAND_ID_SIZE);
+    if Length(cmdData) > 0 then
+      Move(Data[COMMAND_ID_SIZE], cmdData[0], Length(cmdData));
+
+    DoHandleCommand(cmdID, cmdData);
+    Exit;
+  end;
+
+  dataOffset := 0;
+
+  while dataOffset < Length(Data) do
+  begin
+    // Step 1: Read header if not received yet
+    if not fReceiveBuffer.HeaderReceived then
+    begin
+      bytesToCopy := MESSAGE_HEADER_SIZE - fReceiveBuffer.CurrentLength;
+      if bytesToCopy > (Length(Data) - dataOffset) then
+        bytesToCopy := Length(Data) - dataOffset;
+
+      if Length(fReceiveBuffer.Buffer) < MESSAGE_HEADER_SIZE then
+        SetLength(fReceiveBuffer.Buffer, MESSAGE_HEADER_SIZE);
+
+      Move(Data[dataOffset], fReceiveBuffer.Buffer[fReceiveBuffer.CurrentLength], bytesToCopy);
+      Inc(fReceiveBuffer.CurrentLength, bytesToCopy);
+      Inc(dataOffset, bytesToCopy);
+
+      // Check if header complete
+      if fReceiveBuffer.CurrentLength = MESSAGE_HEADER_SIZE then
+      begin
+        expectedLen := PCardinal(@fReceiveBuffer.Buffer[0])^;
+
+        // Validate message size (must be at least cmdID size)
+        if (expectedLen < COMMAND_ID_SIZE) or (expectedLen > Cardinal(fMaxMessageSize)) then
+        begin
+          DoError(Format('Server sent invalid message size: %d bytes', [expectedLen]));
+          ResetReceiveBuffer;
+          Exit;
+        end;
+
+        fReceiveBuffer.HeaderReceived := True;
+        fReceiveBuffer.ExpectedLength := expectedLen;
+        fReceiveBuffer.CurrentLength := 0;
+        SetLength(fReceiveBuffer.Buffer, expectedLen);
+      end;
+    end
+    // Step 2: Read message body
+    else
+    begin
+      bytesToCopy := fReceiveBuffer.ExpectedLength - fReceiveBuffer.CurrentLength;
+      if bytesToCopy > (Length(Data) - dataOffset) then
+        bytesToCopy := Length(Data) - dataOffset;
+
+      Move(Data[dataOffset], fReceiveBuffer.Buffer[fReceiveBuffer.CurrentLength], bytesToCopy);
+      Inc(fReceiveBuffer.CurrentLength, bytesToCopy);
+      Inc(dataOffset, bytesToCopy);
+
+      // Check if message complete
+      if fReceiveBuffer.CurrentLength = fReceiveBuffer.ExpectedLength then
+      begin
+        // Extract complete message
+        SetLength(completeMessage, fReceiveBuffer.ExpectedLength);
+        Move(fReceiveBuffer.Buffer[0], completeMessage[0], fReceiveBuffer.ExpectedLength);
+
+        // Reset buffer for next message
+        ResetReceiveBuffer;
+
+        // Extract cmdID (first 8 bytes)
+        cmdID := PInt64(@completeMessage[0])^;
+
+        // Extract data (remaining bytes)
+        SetLength(cmdData, Length(completeMessage) - COMMAND_ID_SIZE);
+        if Length(cmdData) > 0 then
+          Move(completeMessage[COMMAND_ID_SIZE], cmdData[0], Length(cmdData));
+
+        // Fire OnHandleCommand with cmdID and data
+        DoHandleCommand(cmdID, cmdData);
+
+        // Continue processing remaining data
+        Continue;
+      end;
+    end;
+  end;
+end;
+
+// =============================================================================
+// CONNECTION METHODS
 // =============================================================================
 
 function TCrossSocketClient.Connect: Boolean;
@@ -379,7 +505,8 @@ begin
 
   try
     fUserDisconnected := False;
-    fReconnectState := False; // Reset reconnect state on manual connect
+    fReconnectState := False;
+    ResetReceiveBuffer;
     DoStateChange(csConnecting);
     InternalConnect;
     Result := True;
@@ -387,7 +514,7 @@ begin
     on E: Exception do
     begin
       fLastError := E.Message;
-      DoStateChange(csClosed); // Use csClosed instead of csError
+      DoStateChange(csClosed);
       DoError(E.Message);
     end;
   end;
@@ -395,7 +522,6 @@ end;
 
 function TCrossSocketClient.ConnectSync: Boolean;
 begin
-  // For Cross Socket, this would be the same as async since Cross Socket handles async internally
   Result := Connect;
 end;
 
@@ -408,19 +534,14 @@ begin
     fConnecting := True;
     fConnected := False;
 
-    // Start Cross Socket processing
     fCrossSocket.StartLoop;
 
-    // **CRITICAL FIX**: Connect using ONLY the callback - don't manually fire events!
     fCrossSocket.Connect(fHost, fPort,
       procedure(const AConnection: ICrossConnection; const ASuccess: Boolean)
       begin
         if ASuccess then
         begin
-          // **CRITICAL FIX**: Set connection but DON'T call DoConnect here!
-          // The OnCrossSocketConnected event will handle that automatically
           fConnection := AConnection;
-          // Note: OnCrossSocketConnected will be called automatically by CrossSocket
         end
         else
         begin
@@ -445,7 +566,7 @@ end;
 procedure TCrossSocketClient.Disconnect;
 begin
   fUserDisconnected := True;
-  fReconnectState := False; // Clear reconnect state on manual disconnect
+  fReconnectState := False;
   StopReconnectTimer;
   DoStateChange(csDisconnected);
   InternalDisconnect;
@@ -460,23 +581,20 @@ begin
     fConnected := False;
     fConnecting := False;
     fReconnecting := False;
+    ResetReceiveBuffer;
 
-    // **CRITICAL FIX**: Close connection - OnCrossSocketDisconnected will be called automatically
     if fConnection <> nil then
     begin
       try
-        fConnection.Close;  // This will trigger OnCrossSocketDisconnected automatically
+        fConnection.Close;
       except
-        // Ignore close errors but still clean up
         fConnection := nil;
-        // **CRITICAL FIX**: If close failed, manually fire disconnect
         if not fInDisconnectEvent then
           DoDisconnect;
       end;
     end
     else
     begin
-      // **CRITICAL FIX**: No connection to close, manually fire disconnect
       if not fInDisconnectEvent then
       begin
         DoStateChange(csDisconnected);
@@ -484,13 +602,11 @@ begin
       end;
     end;
 
-    // Stop Cross Socket
     if fCrossSocket <> nil then
     begin
       try
         fCrossSocket.StopLoop;
       except
-        // Ignore stop errors
       end;
     end;
 
@@ -498,7 +614,6 @@ begin
     on E: Exception do
     begin
       fLastError := 'Disconnect error: ' + E.Message;
-      // Force cleanup even on error
       fConnection := nil;
       fConnected := False;
       fConnecting := False;
@@ -509,12 +624,11 @@ begin
 end;
 
 // =============================================================================
-// **CRITICAL FIX**: FIXED CROSS SOCKET EVENT HANDLERS - NO MORE DUPLICATES!
+// CROSS SOCKET EVENT HANDLERS
 // =============================================================================
 
 procedure TCrossSocketClient.OnCrossSocketConnected(const Sender: TObject; const AConnection: ICrossConnection);
 begin
-  // **CRITICAL FIX**: Use flag to prevent duplicate calls
   if fInConnectEvent then
     Exit;
 
@@ -527,8 +641,9 @@ begin
     fReconnecting := False;
     fReconnectState := False;
     StopReconnectTimer;
+    ResetReceiveBuffer;
     DoStateChange(csConnected);
-    DoConnect;  // Fire OnConnect event ONLY ONCE
+    DoConnect;
   finally
     fInConnectEvent := False;
   end;
@@ -536,7 +651,6 @@ end;
 
 procedure TCrossSocketClient.OnCrossSocketDisconnected(const Sender: TObject; const AConnection: ICrossConnection);
 begin
-  // **CRITICAL FIX**: Use flag to prevent duplicate calls AND ensure it fires!
   if fInDisconnectEvent then
     Exit;
 
@@ -546,8 +660,9 @@ begin
     begin
       fConnected := False;
       fConnection := nil;
+      ResetReceiveBuffer;
       DoStateChange(csDisconnected);
-      DoDisconnect;  // **CRITICAL FIX**: Fire OnDisconnect event!
+      DoDisconnect;
       HandleUnexpectedDisconnection;
     end;
   finally
@@ -559,61 +674,60 @@ procedure TCrossSocketClient.OnCrossSocketReceived(const Sender: TObject; const 
 var
   ReceivedData: TBytes;
 begin
-  // Convert received data to TBytes
   SetLength(ReceivedData, ALen);
   if ALen > 0 then
     Move(ABuf^, ReceivedData[0], ALen);
 
-  // Update statistics first
   DoDataReceived(ReceivedData);
 
-  // **FIXED: NO ENCRYPTION - Process data directly!**
-  DoHandleCommand(ReceivedData);
+  // **Process with message framing**
+  ProcessReceivedData(ReceivedData);
 end;
 
 procedure TCrossSocketClient.OnCrossSocketSent(const Sender: TObject; const AConnection: ICrossConnection; const ABuf: Pointer; const ALen: Integer);
 var
   SentData: TBytes;
 begin
-  // **CRITICAL FIX**: Use flag to prevent duplicate calls
   if fInDataSentEvent then
     Exit;
 
   fInDataSentEvent := True;
   try
-    // Convert sent data to TBytes for statistics
     SetLength(SentData, ALen);
     if ALen > 0 then
       Move(ABuf^, SentData[0], ALen);
 
-    DoDataSent(SentData);  // Fire OnDataSent event ONLY ONCE
+    DoDataSent(SentData);
   finally
     fInDataSentEvent := False;
   end;
 end;
 
 // =============================================================================
-// **FIXED SEND METHOD** - NO ENCRYPTION!
+// SEND METHOD
 // =============================================================================
 
-function TCrossSocketClient.SendCommand(const Command: TBytes): Boolean;
+function TCrossSocketClient.SendCommand(const aCmd: Int64; const aData: TBytes): Boolean;
+var
+  framedData: TBytes;
 begin
   Result := False;
-  if not IsConnected or (Length(Command) = 0) then
+  if not IsConnected then
     Exit;
 
   try
-    // **FIXED: Send directly - NO ENCRYPTION!**
+    // **Apply message framing with cmdID**
+    framedData := CreateMessageFrame(aCmd, aData);
+
     if fConnection <> nil then
     begin
-      fConnection.SendBytes(Command,
+      fConnection.SendBytes(framedData,
         procedure(const AConnection: ICrossConnection; const ASuccess: Boolean)
         begin
           if not ASuccess then
             DoError('Send failed');
         end);
       Result := True;
-      // **CRITICAL FIX**: DON'T call DoDataSent here! OnCrossSocketSent will handle it!
     end;
   except
     on E: Exception do
@@ -635,8 +749,8 @@ begin
      ((fMaxReconnectAttempts = 0) or (fReconnectAttempts < fMaxReconnectAttempts)) then
   begin
     fReconnecting := True;
-    fReconnectState := True; // Set reconnect state
-    DoStateChange(csConnecting); // Use csConnecting for reconnect state
+    fReconnectState := True;
+    DoStateChange(csConnecting);
     StartReconnectTimer;
   end;
 end;
@@ -663,17 +777,15 @@ begin
   StopReconnectTimer;
   Inc(fReconnectAttempts);
 
-  // Calculate interval based on strategy
   case fReconnectStrategy of
     rsLinear:
       actualInterval := fReconnectInterval;
     rsExponential:
-      actualInterval := fReconnectInterval * (1 shl Min(fReconnectAttempts - 1, 10)); // Cap at 2^10
+      actualInterval := fReconnectInterval * (1 shl Min(fReconnectAttempts - 1, 10));
   else
     actualInterval := fReconnectInterval;
   end;
 
-  // Update timer for next attempt if this one fails
   if fReconnectTimer <> nil then
     fReconnectTimer.Interval := actualInterval;
 
@@ -768,11 +880,10 @@ end;
 
 procedure TCrossSocketClient.SetName(const Value: string);
 begin
-  // FIXED: Actually set the component's Name, not just the internal field
   if (Value <> '') and (Value <> Name) then
   begin
-    inherited Name := Value;  // This is the key fix!
-    fName := Value;  // Keep internal field in sync
+    inherited Name := Value;
+    fName := Value;
   end;
 end;
 
@@ -873,6 +984,21 @@ begin
     fMaxReconnectAttempts := Value;
 end;
 
+procedure TCrossSocketClient.SetUseMessageFraming(const Value: Boolean);
+begin
+  if fConnected or fConnecting then
+    raise Exception.Create('Cannot change UseMessageFraming while connected');
+  fUseMessageFraming := Value;
+  ResetReceiveBuffer;
+end;
+
+procedure TCrossSocketClient.SetMaxMessageSize(const Value: Integer);
+begin
+  if Value < 1024 then
+    raise Exception.Create('MaxMessageSize must be at least 1024 bytes');
+  fMaxMessageSize := Value;
+end;
+
 // =============================================================================
 // STATISTICS METHODS
 // =============================================================================
@@ -951,7 +1077,6 @@ begin
     fOnError(Self, ErrorMsg);
 end;
 
-// OnDataReceived is for STATISTICS/LOGGING ONLY!
 procedure TCrossSocketClient.DoDataReceived(const Data: TBytes);
 begin
   UpdateBytesReceived(Length(Data));
@@ -959,7 +1084,6 @@ begin
     fOnDataReceived(Self, Data);
 end;
 
-// OnDataSent is for STATISTICS/LOGGING ONLY!
 procedure TCrossSocketClient.DoDataSent(const Data: TBytes);
 begin
   UpdateBytesSent(Length(Data));
@@ -967,11 +1091,10 @@ begin
     fOnDataSent(Self, Data);
 end;
 
-// OnHandleCommand is for ACTUAL DATA PROCESSING!
-procedure TCrossSocketClient.DoHandleCommand(const Command: TBytes);
+procedure TCrossSocketClient.DoHandleCommand(const aCmd: Int64; const aData: TBytes);
 begin
   if Assigned(fOnHandleCommand) then
-    fOnHandleCommand(Self, Command);
+    fOnHandleCommand(Self, 0, aCmd, aData); // ClientID = 0 for client-side
 end;
 
 procedure TCrossSocketClient.DoConnect;

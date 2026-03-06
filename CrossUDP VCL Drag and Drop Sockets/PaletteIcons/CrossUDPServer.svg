@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g2" x1="0" x2="1">
+      <stop offset="0%" stop-color="#66ff88" />
+      <stop offset="100%" stop-color="#00aa55" />
+    </linearGradient>
+  </defs>
+  <rect rx="10" ry="10" width="64" height="64" fill="url(#g2)" />
+  <g fill="#fff" transform="translate(6,8)">
+    <rect x="2" y="6" width="40" height="26" rx="4" ry="4" />
+    <circle cx="8" cy="19" r="4" fill="#004422" opacity="0.12" />
+    <text x="22" y="25" font-family="Segoe UI, Arial" font-size="12" fill="#ffffff" text-anchor="middle" font-weight="700">UDP</text>
+  </g>
+  <g opacity="0.12"><rect x="0" y="0" width="64" height="64" fill="#000"/></g>
+</svg>

@@ -1,0 +1,13 @@
+/* Alternate resource script for CrossUDP package palette icons.
+   Compile with: brcc32 CrossUDPPackage.rc
+   This produces CrossUDPPackage.res.
+   Note: CrossUDPPackage.dpk currently references CrossUDPSockets.res.
+*/
+
+// Class-name resources (most Delphi package setups resolve these)
+TCROSSUDPCLIENT BITMAP "PaletteIcons\\CrossUDPClient.bmp"
+TCROSSUDPSERVER BITMAP "PaletteIcons\\CrossUDPServer.bmp"
+
+// Alias resources (some setups resolve without leading T)
+CROSSUDPCLIENT BITMAP "PaletteIcons\\CrossUDPClient.bmp"
+CROSSUDPSERVER BITMAP "PaletteIcons\\CrossUDPServer.bmp"

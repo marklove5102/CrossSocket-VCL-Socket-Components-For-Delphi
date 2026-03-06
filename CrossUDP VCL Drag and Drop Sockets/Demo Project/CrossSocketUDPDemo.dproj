@@ -1,52 +1,17 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{AA4C7706-6DB2-4C42-A0CA-2DE86E8E7AA4}</ProjectGuid>
-        <MainSource>CrossSocketComponents.dpk</MainSource>
-        <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <ProjectName Condition="'$(ProjectName)'==''">CrossSocketComponents</ProjectName>
-        <TargetedPlatforms>1741953</TargetedPlatforms>
-        <AppType>Package</AppType>
+        <ProjectGuid>{2EEAF554-5D00-480F-8DCA-617706405F59}</ProjectGuid>
+        <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
-        <ProjectVersion>20.2</ProjectVersion>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectName Condition="'$(ProjectName)'==''">CrossSocketUDPDemo</ProjectName>
+        <TargetedPlatforms>3</TargetedPlatforms>
+        <AppType>Application</AppType>
+        <MainSource>CrossSocketUDPDemo.dpr</MainSource>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Android' and '$(Base)'=='true') or '$(Base_Android)'!=''">
-        <Base_Android>true</Base_Android>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Base)'=='true') or '$(Base_Android64)'!=''">
-        <Base_Android64>true</Base_Android64>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Base)'=='true') or '$(Base_iOSDevice64)'!=''">
-        <Base_iOSDevice64>true</Base_iOSDevice64>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='iOSSimARM64' and '$(Base)'=='true') or '$(Base_iOSSimARM64)'!=''">
-        <Base_iOSSimARM64>true</Base_iOSSimARM64>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Linux64' and '$(Base)'=='true') or '$(Base_Linux64)'!=''">
-        <Base_Linux64>true</Base_Linux64>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='OSX64' and '$(Base)'=='true') or '$(Base_OSX64)'!=''">
-        <Base_OSX64>true</Base_OSX64>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='OSXARM64' and '$(Base)'=='true') or '$(Base_OSXARM64)'!=''">
-        <Base_OSXARM64>true</Base_OSXARM64>
-        <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
@@ -59,227 +24,189 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win64x' and '$(Base)'=='true') or '$(Base_Win64x)'!=''">
-        <Base_Win64x>true</Base_Win64x>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Android64)'!=''">
-        <Cfg_1_Android64>true</Cfg_1_Android64>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
         <CfgParent>Cfg_1</CfgParent>
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Cfg_1)'=='true') or '$(Cfg_1_iOSDevice64)'!=''">
-        <Cfg_1_iOSDevice64>true</Cfg_1_iOSDevice64>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64)'!=''">
+        <Cfg_1_Win64>true</Cfg_1_Win64>
         <CfgParent>Cfg_1</CfgParent>
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='OSX64' and '$(Cfg_1)'=='true') or '$(Cfg_1_OSX64)'!=''">
-        <Cfg_1_OSX64>true</Cfg_1_OSX64>
-        <CfgParent>Cfg_1</CfgParent>
-        <Cfg_1>true</Cfg_1>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='OSXARM64' and '$(Cfg_1)'=='true') or '$(Cfg_1_OSXARM64)'!=''">
-        <Cfg_1_OSXARM64>true</Cfg_1_OSXARM64>
-        <CfgParent>Cfg_1</CfgParent>
-        <Cfg_1>true</Cfg_1>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Android64)'!=''">
-        <Cfg_2_Android64>true</Cfg_2_Android64>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
         <CfgParent>Cfg_2</CfgParent>
         <Cfg_2>true</Cfg_2>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Cfg_2)'=='true') or '$(Cfg_2_iOSDevice64)'!=''">
-        <Cfg_2_iOSDevice64>true</Cfg_2_iOSDevice64>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='OSX64' and '$(Cfg_2)'=='true') or '$(Cfg_2_OSX64)'!=''">
-        <Cfg_2_OSX64>true</Cfg_2_OSX64>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='OSXARM64' and '$(Cfg_2)'=='true') or '$(Cfg_2_OSXARM64)'!=''">
-        <Cfg_2_OSXARM64>true</Cfg_2_OSXARM64>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win64)'!=''">
+        <Cfg_2_Win64>true</Cfg_2_Win64>
         <CfgParent>Cfg_2</CfgParent>
         <Cfg_2>true</Cfg_2>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
-        <DCC_F>false</DCC_F>
-        <DCC_K>false</DCC_K>
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
-        <DCC_ImageBase>00400000</DCC_ImageBase>
-        <GenDll>true</GenDll>
-        <GenPackage>true</GenPackage>
-        <SanitizedProjectName>CrossSocketComponents</SanitizedProjectName>
-        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;DUnitX.Loggers.GUI;$(DCC_Namespace)</DCC_Namespace>
-        <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Android)'!=''">
-        <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=34</VerInfo_Keys>
-        <BT_BuildType>Debug</BT_BuildType>
-        <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
-        <EnabledSysJars>activity-1.7.2.dex.jar;annotation-experimental-1.3.0.dex.jar;annotation-jvm-1.6.0.dex.jar;annotations-13.0.dex.jar;appcompat-1.2.0.dex.jar;appcompat-resources-1.2.0.dex.jar;billing-6.0.1.dex.jar;biometric-1.1.0.dex.jar;browser-1.4.0.dex.jar;cloud-messaging.dex.jar;collection-1.1.0.dex.jar;concurrent-futures-1.1.0.dex.jar;core-1.10.1.dex.jar;core-common-2.2.0.dex.jar;core-ktx-1.10.1.dex.jar;core-runtime-2.2.0.dex.jar;cursoradapter-1.0.0.dex.jar;customview-1.0.0.dex.jar;documentfile-1.0.0.dex.jar;drawerlayout-1.0.0.dex.jar;error_prone_annotations-2.9.0.dex.jar;exifinterface-1.3.6.dex.jar;firebase-annotations-16.2.0.dex.jar;firebase-common-20.3.1.dex.jar;firebase-components-17.1.0.dex.jar;firebase-datatransport-18.1.7.dex.jar;firebase-encoders-17.0.0.dex.jar;firebase-encoders-json-18.0.0.dex.jar;firebase-encoders-proto-16.0.0.dex.jar;firebase-iid-interop-17.1.0.dex.jar;firebase-installations-17.1.3.dex.jar;firebase-installations-interop-17.1.0.dex.jar;firebase-measurement-connector-19.0.0.dex.jar;firebase-messaging-23.1.2.dex.jar;fmx.dex.jar;fragment-1.2.5.dex.jar;google-play-licensing.dex.jar;interpolator-1.0.0.dex.jar;javax.inject-1.dex.jar;kotlin-stdlib-1.8.22.dex.jar;kotlin-stdlib-common-1.8.22.dex.jar;kotlin-stdlib-jdk7-1.8.22.dex.jar;kotlin-stdlib-jdk8-1.8.22.dex.jar;kotlinx-coroutines-android-1.6.4.dex.jar;kotlinx-coroutines-core-jvm-1.6.4.dex.jar;legacy-support-core-utils-1.0.0.dex.jar;lifecycle-common-2.6.1.dex.jar;lifecycle-livedata-2.6.1.dex.jar;lifecycle-livedata-core-2.6.1.dex.jar;lifecycle-runtime-2.6.1.dex.jar;lifecycle-service-2.6.1.dex.jar;lifecycle-viewmodel-2.6.1.dex.jar;lifecycle-viewmodel-savedstate-2.6.1.dex.jar;listenablefuture-1.0.dex.jar;loader-1.0.0.dex.jar;localbroadcastmanager-1.0.0.dex.jar;okio-jvm-3.4.0.dex.jar;play-services-ads-22.2.0.dex.jar;play-services-ads-base-22.2.0.dex.jar;play-services-ads-identifier-18.0.0.dex.jar;play-services-ads-lite-22.2.0.dex.jar;play-services-appset-16.0.1.dex.jar;play-services-base-18.1.0.dex.jar;play-services-basement-18.1.0.dex.jar;play-services-cloud-messaging-17.0.1.dex.jar;play-services-location-21.0.1.dex.jar;play-services-maps-18.1.0.dex.jar;play-services-measurement-base-20.1.2.dex.jar;play-services-measurement-sdk-api-20.1.2.dex.jar;play-services-stats-17.0.2.dex.jar;play-services-tasks-18.0.2.dex.jar;print-1.0.0.dex.jar;profileinstaller-1.3.0.dex.jar;room-common-2.2.5.dex.jar;room-runtime-2.2.5.dex.jar;savedstate-1.2.1.dex.jar;sqlite-2.1.0.dex.jar;sqlite-framework-2.1.0.dex.jar;startup-runtime-1.1.1.dex.jar;tracing-1.0.0.dex.jar;transport-api-3.0.0.dex.jar;transport-backend-cct-3.1.8.dex.jar;transport-runtime-3.1.8.dex.jar;user-messaging-platform-2.0.0.dex.jar;vectordrawable-1.1.0.dex.jar;vectordrawable-animated-1.1.0.dex.jar;versionedparcelable-1.1.1.dex.jar;viewpager-1.0.0.dex.jar;work-runtime-2.7.0.dex.jar</EnabledSysJars>
-        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Android64)'!=''">
-        <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
-        <EnabledSysJars>activity-1.7.2.dex.jar;annotation-experimental-1.3.0.dex.jar;annotation-jvm-1.6.0.dex.jar;annotations-13.0.dex.jar;appcompat-1.2.0.dex.jar;appcompat-resources-1.2.0.dex.jar;billing-6.0.1.dex.jar;biometric-1.1.0.dex.jar;browser-1.4.0.dex.jar;cloud-messaging.dex.jar;collection-1.1.0.dex.jar;concurrent-futures-1.1.0.dex.jar;core-1.10.1.dex.jar;core-common-2.2.0.dex.jar;core-ktx-1.10.1.dex.jar;core-runtime-2.2.0.dex.jar;cursoradapter-1.0.0.dex.jar;customview-1.0.0.dex.jar;documentfile-1.0.0.dex.jar;drawerlayout-1.0.0.dex.jar;error_prone_annotations-2.9.0.dex.jar;exifinterface-1.3.6.dex.jar;firebase-annotations-16.2.0.dex.jar;firebase-common-20.3.1.dex.jar;firebase-components-17.1.0.dex.jar;firebase-datatransport-18.1.7.dex.jar;firebase-encoders-17.0.0.dex.jar;firebase-encoders-json-18.0.0.dex.jar;firebase-encoders-proto-16.0.0.dex.jar;firebase-iid-interop-17.1.0.dex.jar;firebase-installations-17.1.3.dex.jar;firebase-installations-interop-17.1.0.dex.jar;firebase-measurement-connector-19.0.0.dex.jar;firebase-messaging-23.1.2.dex.jar;fmx.dex.jar;fragment-1.2.5.dex.jar;google-play-licensing.dex.jar;interpolator-1.0.0.dex.jar;javax.inject-1.dex.jar;kotlin-stdlib-1.8.22.dex.jar;kotlin-stdlib-common-1.8.22.dex.jar;kotlin-stdlib-jdk7-1.8.22.dex.jar;kotlin-stdlib-jdk8-1.8.22.dex.jar;kotlinx-coroutines-android-1.6.4.dex.jar;kotlinx-coroutines-core-jvm-1.6.4.dex.jar;legacy-support-core-utils-1.0.0.dex.jar;lifecycle-common-2.6.1.dex.jar;lifecycle-livedata-2.6.1.dex.jar;lifecycle-livedata-core-2.6.1.dex.jar;lifecycle-runtime-2.6.1.dex.jar;lifecycle-service-2.6.1.dex.jar;lifecycle-viewmodel-2.6.1.dex.jar;lifecycle-viewmodel-savedstate-2.6.1.dex.jar;listenablefuture-1.0.dex.jar;loader-1.0.0.dex.jar;localbroadcastmanager-1.0.0.dex.jar;okio-jvm-3.4.0.dex.jar;play-services-ads-22.2.0.dex.jar;play-services-ads-base-22.2.0.dex.jar;play-services-ads-identifier-18.0.0.dex.jar;play-services-ads-lite-22.2.0.dex.jar;play-services-appset-16.0.1.dex.jar;play-services-base-18.1.0.dex.jar;play-services-basement-18.1.0.dex.jar;play-services-cloud-messaging-17.0.1.dex.jar;play-services-location-21.0.1.dex.jar;play-services-maps-18.1.0.dex.jar;play-services-measurement-base-20.1.2.dex.jar;play-services-measurement-sdk-api-20.1.2.dex.jar;play-services-stats-17.0.2.dex.jar;play-services-tasks-18.0.2.dex.jar;print-1.0.0.dex.jar;profileinstaller-1.3.0.dex.jar;room-common-2.2.5.dex.jar;room-runtime-2.2.5.dex.jar;savedstate-1.2.1.dex.jar;sqlite-2.1.0.dex.jar;sqlite-framework-2.1.0.dex.jar;startup-runtime-1.1.1.dex.jar;tracing-1.0.0.dex.jar;transport-api-3.0.0.dex.jar;transport-backend-cct-3.1.8.dex.jar;transport-runtime-3.1.8.dex.jar;user-messaging-platform-2.0.0.dex.jar;vectordrawable-1.1.0.dex.jar;vectordrawable-animated-1.1.0.dex.jar;versionedparcelable-1.1.1.dex.jar;viewpager-1.0.0.dex.jar;work-runtime-2.7.0.dex.jar</EnabledSysJars>
-        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_iOSDevice64)'!=''">
-        <iOS_AppStore1024>$(BDS)\bin\Artwork\iOS\iPhone\FM_ApplicationIcon_1024x1024.png</iOS_AppStore1024>
-        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_iOSSimARM64)'!=''">
-        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Linux64)'!=''">
-        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
-        <DCC_Define>CROSSVCL;$(DCC_Define)</DCC_Define>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_OSX64)'!=''">
-        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
-        <DCC_Define>CROSSVCL;$(DCC_Define)</DCC_Define>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_OSXARM64)'!=''">
-        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
-        <DCC_Define>CROSSVCL;$(DCC_Define)</DCC_Define>
+        <DCC_F>false</DCC_F>
+        <DCC_K>false</DCC_K>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+        <Custom_Styles>Carbon|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Carbon.vsf</Custom_Styles>
+        <SanitizedProjectName>CrossSocketUDPDemo</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <DCC_UsePackage>dxPScxExtCommonRS29;dxRichEditControlCoreRS29;lmdrtbar;vclie;OpenOfficeComponent_install;bindengine;IndyIPCommon;DropMasterVcl;aurelius;ChromeTabs_R;FMX_FlexCel_Components;Twitter;cxVerticalGridRS29;dbxcds;vcledge;TMSVCLSecuritySystemPkgUIDXE15;mORMot2WebSocketComponents;VCLTMSFNCChartPkgDXE15;HGMComponents;FlexCel_Pdf;cxSchedulerWebServiceStorageRS29;dxRichEditControlRS29;dxPsPrVwAdvRS29;FMXTMSFNCChartPkgDXE15;vclribbon;VCLTMSFNCAppToolsPkgDXE15;JvAppFrm;NxDBGrid6Run_d12;dxPSdxGaugeControlLnkRS29;lmdrtdesign;lmdrtsearchdb;TMSScripter_IDE;JclVcl;dxRibbonCustomizationFormRS29;Jcl;dbexpress;JvManagedThreads;dxEMFRS29;PowerPDFDR;DesktopCaptureComponents;lmdrtchart;inet;PythonVcl;vcltouch;lmdrtrtfdb;uniGUI29VCL;dxPSdxFCLnkRS29;FMX_FlexCel_Core;FireDACDBXDriver;dxSpreadSheetCoreConditionalFormattingDialogsRS29;SysToolsDR;VCL_FlexCel_Core;tmsbcl;CustomIPTransport;FireDACMSSQLDriver;JvSystem;lmdrtthemes;DIFileFinder_D12;JvCrypt;lmdrtfx;dxPScxTLLnkRS29;clinetsuite_104;VCL_TMSFNCGridExcelBridge;FMXTMSFNCWebSocketPkgDXE15;lmdrtshell;EsVclCore;vclFireDAC;dxSpreadSheetRS29;FireDACODBCDriver;emsserverresource;dxPScxVGridLnkRS29;TMSCryptoPkgDEDXE15;TMSMQTTPkgDXE15;lmdrtdocking;lmdrtdialog;rtl;AudioComponents;VCLTMSFNCWXPackPkgDXE15;TMSVCLPluginFrameworkPkgMgrDXE15;dxServerModeRS29;NxDBGrid6Dsgn_d12;DBXSqliteDriver;dxBarDBNavRS29;VirtualTreesDR;NxGrid6Dsgn_d12;DBXSybaseASEDriver;JvRuntimeDesign;FMXTMSFNCBloxPkgDXE15;NxInspector6Dsgn_d12;lmdrteldb;JvXPCtrls;TMSMQTTPkgDEDXE15;NetCom7;DelphiUCLPackage;inetdbxpress;FireDAC;JvDocking;xmlrtl;P4DEnvironment;dsnap;JvCmp;FireDACDb2Driver;dxPSdxLCLnkRS29;DBXOracleDriver;dclTMSQueryStudio;TMSVCLGUIMotionsPkgDXE15;StyleControls_d12Athens;CrossUDPPackage;DatasnapConnectorsFreePascal;SVGIconImageList;dxPSLnksRS29;DelphiModbus12Athens;MorMotComponents;dxPSdxOCLnkRS29;cxSchedulerGridRS29;TMSPassKitPkgDXE15;FMXTMSFNCAppToolsPkgDXE15;FMXTMSFNCCorePkgDXE15;TMSLogging;sparkle;dxPSdxDBTVLnkRS29;lmdrtscriptimp;sphinx;dxGaugeControlRS29;MPCommonLibD;bindcompvclwinx;TMSMemInsightPkgDXE15;dxOrgChartAdvancedCustomizeFormRS29;NxStandard6Dsgn_d12;bindcompfmx;TMSVCLUIPackPkgExDXE15;CoolTrayIcon_D12;JvBands;dxFlowChartLayoutsRS29;VCLTMSFNCBloxPkgDXE15;Intraweb_15_D12;AdvChartDXE15;dxdborRS29;lmdrtsys;ngcommon;nghtml;FireDACASADriver;TMSVCLIWPkgDEDXE15;SVGIconImageListFMX;dxPScxGridLnkRS29;vclactnband;TMSVCLUIPackPkgXlsDXE15;TMSScripter;FireDACInfxDriver;dxRichEditCoreRS29;AcmComponents;DBXMySQLDriver;dxFlowChartAdvancedCustomizeFormRS29;VclSmp;DataSnapCommon;TMSPassKitPkgDEDXE15;fmxase;JvPluginSystem;dxFlowChartRS29;TMSVCLUIPackPkgWizDXE15;TMSDiagram;FlexCel_XlsAdapter;cxGridRS29;dxSpellCheckerRS29;CrossSocketComponents;DataSnapIndy10ServerTransport;JclDeveloperTools;FMXTMSFNCCloudPackPkgDXE15;dxMapControlRS29;MiTeC_Common;vcldsnap;DBXInterBaseDriver;JvWizards;RadiantShapesFmx;NxCollection6Dsgn_d12;DzSocket;lmdrtsyntax;VCLTMSFNCGanttChartPkgDXE15;vcldb;StyledComponents;cxSchedulerTreeBrowserRS29;JvCore;dacfmx290;TMSmCLPkgDXE15;dxTabbedMDIRS29;inetstn;dxHttpIndyRequestRS29;vclZipForged12;cxPivotGridOLAPRS29;RaizeComponentsVclDb;AWSSDKVCL;JvDotNetCtrls;vcl;JvHMI;TMSScripter_Legacy;kbmMemRunD12Pro;DataSnapClient;dxCoreRS29;IcsVclNewRun;TMSVCLIWPkgDXE15;lmdrttoolsdb;dxSkinsCoreRS29;emsclientfiredac;FireDACPgDriver;FireDACDSDriver;JvPrintPreview;FMXTMSFNCGanttChartPkgDXE15;tethering;JvStdCtrls;bindcompvcl;lmdrtchartdb;CloudService;BigNumbers;PythonFmx;TMSFMXPackPkgDXE15;unidac290;cxSchedulerRS29;RaizeComponentsVcl;FireDACIBDriver;dxPScxCommonRS29;soapserver;dxRibbonRS29;TMSVCLPluginFrameworkPkgCoreDXE15;vclwinx;DataSnapServer;IWBootstrap4D12;fmx;dxSpreadSheetReportDesignerRS29;DbxCommonDriver;VCLRESTComponents;ECLPackd29;FireDACCommonODBC;DBXMSSQLDriver;dxComnRS29;emsclient;ApperceptAPIClient;FrameStandPackage_11_1;appanalytics;IndyProtocols;vclx;Skia.Package.RTL;dxBarExtDBItemsRS29;dxFlowChartDesignerRS29;TMSCryptoPkgDXE15;sed12Athens;ngvalidators;cxFireDACAdaptersRS29;EasyListviewD;DBXFirebirdDriver;SKIA_FlexCel_Core;dacvcl290;FireDACSqliteDriver;DbxClientDriver;soapmidas;Python;dxDockingRS29;vquery290;IWBootstrapD12;AsyncProDR;GLibWMI;JvDB;lmdrtplugin;mORMot2CryptoComponents;dxorgcRS29;fmxdae;MSICS_Rtl;lmdrtsearch;JvCustom;dxPSdxSpreadSheetLnkRS29;dxPSRichEditControlLnkRS29;LockBox3DR;C4DWizard;JvControls;acntDX12_R;PKIEDB29;lmdrtide;cxADOAdaptersRS29;OmniThreadLibraryRuntime;TMSQueryStudio;JvJans;TMSiCLPkgDXE15;dxPSPrVwRibbonRS29;IndySystem;sbridge290;lmdrtl;JvMM;dxPSdxDBOCLnkRS29;lmdrtinspector;VCL_TMSVCLGridExcelBridge;JvGlobus;dxGDIPlusRS29;PackageTCPServerClientLibrary_Athens;JclContainers;JvPageComps;dxPSCoreRS29;FlexCel_Render;FireDACCommon;DataSnapServerMidas;dxPSdxMapControlLnkRS29;IcsFmxNewRun;cxGridEMFRS29;DOSCommandDR;dxGanttControlRS29;dxPScxPivotGridLnkRS29;dxADOServerModeRS29;dxWizardControlRS29;TMSScripter_VCL;bindcompdbx;FireDACMySQLDriver;dxCloudServiceLibraryRS29;NxGrid6Run_d12;StyledAnimatedComponents;VCL_FlexCel_Components;remotedb;IcsCommonNewRun;NxStandard6Run_d12;TMSVCLUIPackPkgDXE15;dxSpreadSheetCoreRS29;dxNavBarRS29;vclimg;DataSnapFireDAC;unidacfmx290;JvDlgs;FMXTMSFNCWXPackPkgDXE15;dxFireDACEMFRS29;xdata;lmdrtprint;DBXInformixDriver;fmxobj;bindcompvclsmp;DataSnapNativeClient;TMSFMXCloudPackPkgDEDXE15;BMDThreadPkg;lmdrtscript;FMXTMSFNCUIPackPkgDXE15;FMX_TMSFNCGridExcelBridge;dxmdsRS29;TMSScripter_Memo;dxPScxSchedulerLnkRS29;TMSFNCCorePkgDXE15;lmdrtgrid;FlexCel_Report;emshosting;dxADOEMFRS29;SVGIconImageListRestClient;dxChartControlRS29;vacommpkgdXE15;VCLTMSFNCBloxToolBarsPkgDXE15;FireDACCommonDriver;BrookTardigrade;RadiantShapesFmx_Design;IndyIPClient;dxPDFViewerRS29;EsVclComponents;TMSVCLSecuritySystemPkgCoreDXE15;emsedge;dxBarExtItemsRS29;SysToolsDBDR;uSynEdit_R2025;indy10sbridge290;crcontrols290;GraphQLHttp;inetdb;vclFlexCompressd29;OrpheusDBDR;cxPivotGridChartRS29;TMSFMXCloudPackPkgDXE15;fmxFireDAC;lmdrtspell;cxTreeListdxBarPopupMenuRS29;lmdrtelcore;EsCore;cxSchedulerRibbonStyleEventEditorRS29;JvPascalInterpreter;dxtrmdRS29;NxLayout6Run_d12;DBXOdbcDriver;JvTimeFramework;dbrtl;uniGUI29m;FireDACOracleDriver;Skia.Package.FMX;ComPortDrv;dxPScxPCProdRS29;GraphQLCore;FireDACMSAccDriver;AbbreviaVCLD;TMSWorkflow;DzDirSeek;lmdrtcore;dxRichEditDocumentModelRS29;PKIECtrl29;DataSnapConnectors;FMXTMSFNCMapsPkgDXE15;lmdrtstorage;FireDACMongoDBDriver;CnPack_D120A;PngComponentsD;OrpheusDR;ngvldtctrls;FireDACTDataDriver;cxLibraryRS29;Skia.Package.VCL;lmdrtrtf;VCLTMSFNCUIPackPkgDXE15;ngdragdrop;TMSVCLMultiTouchSDKPkgDXE15;ngdialogs;VCLTMSFNCDashboardPackPkgDXE15;VCLTMSFNCWebSocketPkgDXE15;IconFontsImageList;FlexCel_Core;dxPSdxPDFViewerLnkRS29;SynEditDR;unidacvcl290;bindcomp;lmdrtweb;cxExportRS29;lmdrtelpro;IndyCore;RESTBackendComponents;dxTileControlRS29;dxFireDACServerModeRS29;lmdrttools;AWSSDKFMX;FireDACADSDriver;FMXTMSFNCBloxToolBarsPkgDXE15;vacommpkgdedXE15;RESTComponents;IndyIPServer;dsnapxml;adortl;dxdbtrRS29;dsnapcon;cxPivotGridRS29;DataSnapProviderClient;VCLTMSFNCMapsPkgDXE15;AdvChartDEDXE15;NxInspector6Run_d12;dac290;DBXDb2Driver;dxBarRS29;FMXTMSFNCDashboardPackPkgDXE15;DBXSybaseASADriver;NxCollection6Run_d12;VCLTMSFNCCloudPackPkgDXE15;lmdrtrtlx;dxSpreadSheetConditionalFormattingDialogsRS29;IconFontsImageListFMX;cxTreeListRS29;VCLTMSFNCCorePkgDXE15;NxLayout6Dsgn_d12;soaprtl;dxDBXServerModeRS29;JvNet;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_UsePackage>vcl;rtl;$(DCC_UsePackage)</DCC_UsePackage>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_UsePackage>vcl;rtl;$(DCC_UsePackage)</DCC_UsePackage>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win64x)'!=''">
-        <DCC_UsePackage>vcl;rtl;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>dxPScxExtCommonRS29;dxRichEditControlCoreRS29;lmdrtbar;vclie;bindengine;IndyIPCommon;DropMasterVcl;ChromeTabs_R;FMX_FlexCel_Components;Twitter;cxVerticalGridRS29;dbxcds;vcledge;TMSVCLSecuritySystemPkgUIDXE15;VCLTMSFNCChartPkgDXE15;HGMComponents;FlexCel_Pdf;cxSchedulerWebServiceStorageRS29;dxRichEditControlRS29;dxPsPrVwAdvRS29;vclribbon;VCLTMSFNCAppToolsPkgDXE15;NxDBGrid6Run_d12;dxPSdxGaugeControlLnkRS29;lmdrtdesign;lmdrtsearchdb;dxRibbonCustomizationFormRS29;dbexpress;dxEMFRS29;PowerPDFDR;lmdrtchart;inet;PythonVcl;vcltouch;lmdrtrtfdb;uniGUI29VCL;dxPSdxFCLnkRS29;FMX_FlexCel_Core;FireDACDBXDriver;dxSpreadSheetCoreConditionalFormattingDialogsRS29;SysToolsDR;VCL_FlexCel_Core;CustomIPTransport;FireDACMSSQLDriver;lmdrtthemes;lmdrtfx;dxPScxTLLnkRS29;clinetsuite_104;VCL_TMSFNCGridExcelBridge;lmdrtshell;EsVclCore;vclFireDAC;dxSpreadSheetRS29;FireDACODBCDriver;emsserverresource;dxPScxVGridLnkRS29;lmdrtdocking;lmdrtdialog;rtl;VCLTMSFNCWXPackPkgDXE15;dxServerModeRS29;DBXSqliteDriver;dxBarDBNavRS29;VirtualTreesDR;DBXSybaseASEDriver;lmdrteldb;NetCom7;inetdbxpress;FireDAC;xmlrtl;P4DEnvironment;dsnap;FireDACDb2Driver;dxPSdxLCLnkRS29;DBXOracleDriver;StyleControls_d12Athens;DatasnapConnectorsFreePascal;SVGIconImageList;dxPSLnksRS29;dxPSdxOCLnkRS29;cxSchedulerGridRS29;dxPSdxDBTVLnkRS29;lmdrtscriptimp;dxGaugeControlRS29;MPCommonLibD;bindcompvclwinx;TMSMemInsightPkgDXE15;dxOrgChartAdvancedCustomizeFormRS29;bindcompfmx;TMSVCLUIPackPkgExDXE15;dxFlowChartLayoutsRS29;VCLTMSFNCBloxPkgDXE15;AdvChartDXE15;dxdborRS29;lmdrtsys;ngcommon;nghtml;FireDACASADriver;SVGIconImageListFMX;dxPScxGridLnkRS29;vclactnband;TMSVCLUIPackPkgXlsDXE15;FireDACInfxDriver;dxRichEditCoreRS29;DBXMySQLDriver;dxFlowChartAdvancedCustomizeFormRS29;VclSmp;DataSnapCommon;fmxase;dxFlowChartRS29;FlexCel_XlsAdapter;cxGridRS29;dxSpellCheckerRS29;DataSnapIndy10ServerTransport;dxMapControlRS29;vcldsnap;DBXInterBaseDriver;RadiantShapesFmx;lmdrtsyntax;VCLTMSFNCGanttChartPkgDXE15;vcldb;StyledComponents;cxSchedulerTreeBrowserRS29;dxTabbedMDIRS29;inetstn;dxHttpIndyRequestRS29;cxPivotGridOLAPRS29;RaizeComponentsVclDb;AWSSDKVCL;vcl;DataSnapClient;dxCoreRS29;IcsVclNewRun;TMSVCLIWPkgDXE15;lmdrttoolsdb;dxSkinsCoreRS29;emsclientfiredac;FireDACPgDriver;FireDACDSDriver;tethering;bindcompvcl;lmdrtchartdb;CloudService;BigNumbers;PythonFmx;cxSchedulerRS29;RaizeComponentsVcl;FireDACIBDriver;dxPScxCommonRS29;soapserver;dxRibbonRS29;vclwinx;DataSnapServer;fmx;dxSpreadSheetReportDesignerRS29;DbxCommonDriver;VCLRESTComponents;ECLPackd29;FireDACCommonODBC;DBXMSSQLDriver;dxComnRS29;emsclient;ApperceptAPIClient;FrameStandPackage_11_1;appanalytics;IndyProtocols;vclx;dxBarExtDBItemsRS29;dxFlowChartDesignerRS29;ngvalidators;cxFireDACAdaptersRS29;EasyListviewD;DBXFirebirdDriver;FireDACSqliteDriver;DbxClientDriver;soapmidas;Python;dxDockingRS29;AsyncProDR;lmdrtplugin;dxorgcRS29;fmxdae;lmdrtsearch;dxPSdxSpreadSheetLnkRS29;dxPSRichEditControlLnkRS29;LockBox3DR;PKIEDB29;lmdrtide;cxADOAdaptersRS29;OmniThreadLibraryRuntime;dxPSPrVwRibbonRS29;IndySystem;lmdrtl;dxPSdxDBOCLnkRS29;lmdrtinspector;VCL_TMSVCLGridExcelBridge;dxGDIPlusRS29;dxPSCoreRS29;FlexCel_Render;FireDACCommon;DataSnapServerMidas;dxPSdxMapControlLnkRS29;IcsFmxNewRun;cxGridEMFRS29;DOSCommandDR;dxGanttControlRS29;dxPScxPivotGridLnkRS29;dxADOServerModeRS29;dxWizardControlRS29;bindcompdbx;FireDACMySQLDriver;dxCloudServiceLibraryRS29;NxGrid6Run_d12;StyledAnimatedComponents;VCL_FlexCel_Components;IcsCommonNewRun;NxStandard6Run_d12;TMSVCLUIPackPkgDXE15;dxSpreadSheetCoreRS29;dxNavBarRS29;vclimg;DataSnapFireDAC;dxFireDACEMFRS29;lmdrtprint;DBXInformixDriver;fmxobj;bindcompvclsmp;DataSnapNativeClient;BMDThreadPkg;lmdrtscript;FMX_TMSFNCGridExcelBridge;dxmdsRS29;dxPScxSchedulerLnkRS29;lmdrtgrid;FlexCel_Report;emshosting;dxADOEMFRS29;SVGIconImageListRestClient;dxChartControlRS29;vacommpkgdXE15;FireDACCommonDriver;RadiantShapesFmx_Design;IndyIPClient;dxPDFViewerRS29;EsVclComponents;TMSVCLSecuritySystemPkgCoreDXE15;emsedge;dxBarExtItemsRS29;SysToolsDBDR;uSynEdit_R2025;inetdb;OrpheusDBDR;cxPivotGridChartRS29;fmxFireDAC;lmdrtspell;cxTreeListdxBarPopupMenuRS29;lmdrtelcore;EsCore;cxSchedulerRibbonStyleEventEditorRS29;dxtrmdRS29;NxLayout6Run_d12;DBXOdbcDriver;dbrtl;uniGUI29m;FireDACOracleDriver;ComPortDrv;dxPScxPCProdRS29;FireDACMSAccDriver;AbbreviaVCLD;lmdrtcore;dxRichEditDocumentModelRS29;PKIECtrl29;DataSnapConnectors;lmdrtstorage;FireDACMongoDBDriver;PngComponentsD;OrpheusDR;ngvldtctrls;FireDACTDataDriver;cxLibraryRS29;Skia.Package.VCL;lmdrtrtf;VCLTMSFNCUIPackPkgDXE15;ngdragdrop;ngdialogs;VCLTMSFNCDashboardPackPkgDXE15;VCLTMSFNCWebSocketPkgDXE15;IconFontsImageList;FlexCel_Core;dxPSdxPDFViewerLnkRS29;SynEditDR;bindcomp;lmdrtweb;cxExportRS29;lmdrtelpro;IndyCore;RESTBackendComponents;dxTileControlRS29;dxFireDACServerModeRS29;lmdrttools;AWSSDKFMX;FireDACADSDriver;RESTComponents;IndyIPServer;dsnapxml;adortl;dxdbtrRS29;dsnapcon;cxPivotGridRS29;DataSnapProviderClient;VCLTMSFNCMapsPkgDXE15;NxInspector6Run_d12;DBXDb2Driver;dxBarRS29;DBXSybaseASADriver;NxCollection6Run_d12;VCLTMSFNCCloudPackPkgDXE15;lmdrtrtlx;dxSpreadSheetConditionalFormattingDialogsRS29;IconFontsImageListFMX;cxTreeListRS29;VCLTMSFNCCorePkgDXE15;soaprtl;dxDBXServerModeRS29;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
-        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-        <DCC_DebugInformation>0</DCC_DebugInformation>
-        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1_Android64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1_iOSDevice64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1_OSX64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1_OSXARM64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
-        <DCC_RangeChecking>true</DCC_RangeChecking>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_Android64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_RemoteDebug>false</DCC_RemoteDebug>
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_iOSDevice64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
+    <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_OSX64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_OSXARM64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="ComponentIcons.res"/>
-        <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="designide.dcp"/>
-        <DCCReference Include="source\CrossSocket.Client.pas"/>
-        <DCCReference Include="source\CrossSocket.Server.pas"/>
-        <DCCReference Include="source\CrossSocket.Register.pas"/>
-        <DCCReference Include="source\CrossSocket.Base.pas"/>
-        <RcItem Include="PaletteIcons\CrossSocketClient.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TCROSSSOCKETCLIENT</ResourceId>
-        </RcItem>
-        <RcItem Include="PaletteIcons\CrossSocketServer.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>TCROSSSOCKETSERVER</ResourceId>
-        </RcItem>
+        <DCCReference Include="Unit1.pas">
+            <Form>Form1</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
-        <BuildConfiguration Include="Release">
+        <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
-        <BuildConfiguration Include="Debug">
+        <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Delphi.Personality.12</Borland.Personality>
-        <Borland.ProjectType>Package</Borland.ProjectType>
+        <Borland.ProjectType>Application</Borland.ProjectType>
         <BorlandProject>
             <Delphi.Personality>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtbar290.bpl">LMD BarPack Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtrtlx290.bpl">LMD Extended Runtime Library</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtl290.bpl">LMD 2024 - Runtime Library</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtchart290.bpl">LMD ChartPack Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtprint290.bpl">LMD PrintPack Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtchartdb290.bpl">LMD ChartPack Database Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtcore290.bpl">LMD-Tools Core Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtdesign290.bpl">LMD DesignPack Runtime package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtinspector290.bpl">LMD-Tools InspectorPack Runtime package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtdialog290.bpl">LMD-Tools DialogPack Runtime package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtdocking290.bpl">LMD DockingPack Runtime package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtelcore290.bpl">LMD ElPack Core Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrteldb290.bpl">LMD ElPack - Database Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtelpro290.bpl">LMD ElPack - Professional Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtfx290.bpl">LMD-Tools FxPack Runtime Package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtgrid290.bpl">LMD-Tools Grid Runtime package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtide290.bpl">LMD IDE-Tools run-time package.</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtscript290.bpl">LMD ScriptPack run-time package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtplugin290.bpl">LMD Plug-In Library</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtrtf290.bpl">LMD-Tools RichPack Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtrtfdb290.bpl">LMD-Tools RichPack Database Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtscriptimp290.bpl">LMD 2024 - IDE-Tools ScriptPack Import Wizard</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtsearchdb290.bpl">LMD SearchPack Database Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtsearch290.bpl">LMD SearchPack Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtshell290.bpl">LMD-Tools ShellPack Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtspell290.bpl">LMD SpellPack Runtime package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtstorage290.bpl">LMD StoragePack Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtsyntax290.bpl">LMD SyntaxEdit Runtime package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtsys290.bpl">LMD-Tools SysPack Runtime Package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtthemes290.bpl">LMD Themes Support Package</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrttools290.bpl">LMD-Tools Main Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrttoolsdb290.bpl">LMD-Tools Main Database Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\lmdrtweb290.bpl">LMD-Tools WebPack Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\ngcommon290.bpl">NG Common Units</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\ngdialogs290.bpl">NG DialogsPack</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\ngdragdrop290.bpl">NG DragDrop</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\nghtml290.bpl">NG HtmlPack</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\ngvldtctrls290.bpl">NG ValidatorPack Sample Controls</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi 12.2 Athens Components\LMD VCL Complete v2024.4 for Delphi 12 Athens+ CRACK\BPL\ngvalidators290.bpl">NG ValidatorPack</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp290.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
                 <Source>
-                    <Source Name="MainSource">CrossSocketComponents.dpk</Source>
+                    <Source Name="MainSource">CrossSocketUDPDemo.dpr</Source>
                 </Source>
             </Delphi.Personality>
-            <Platforms>
-                <Platform value="Android">False</Platform>
-                <Platform value="Android64">True</Platform>
-                <Platform value="iOSDevice64">True</Platform>
-                <Platform value="iOSSimARM64">True</Platform>
-                <Platform value="Linux64">True</Platform>
-                <Platform value="OSX64">True</Platform>
-                <Platform value="OSXARM64">True</Platform>
-                <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
-                <Platform value="Win64x">True</Platform>
-            </Platforms>
             <Deployment Version="5">
-                <DeployFile LocalName="..\..\..\Public\Documents\Embarcadero\Studio\23.0\Bpl\CrossSocketComponents.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\CrossSocketUDPDemo.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>CrossSocketComponents.bpl</RemoteName>
+                        <RemoteName>CrossSocketUDPDemo.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -385,6 +312,16 @@
                     </Platform>
                     <Platform Name="Android64">
                         <RemoteDir>res\values-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStylesV35">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-v35</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-v35</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -683,6 +620,7 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -691,14 +629,17 @@
                 </DeployClass>
                 <DeployClass Name="DependencyFramework">
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
                     </Platform>
@@ -707,15 +648,30 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="DependencyModule">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
@@ -738,14 +694,17 @@
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
@@ -771,12 +730,15 @@
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -791,9 +753,44 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectOSXDebug"/>
-                <DeployClass Name="ProjectOSXEntitlements"/>
-                <DeployClass Name="ProjectOSXInfoPList"/>
+                <DeployClass Name="ProjectOSXDebug">
+                    <Platform Name="OSX64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXEntitlements">
+                    <Platform Name="OSX32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXInfoPList">
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -830,12 +827,15 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -873,9 +873,41 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectiOSEntitlements"/>
-                <DeployClass Name="ProjectiOSInfoPList"/>
-                <DeployClass Name="ProjectiOSLaunchScreen"/>
+                <DeployClass Name="ProjectiOSEntitlements">
+                    <Platform Name="iOSDevice32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSInfoPList">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSLaunchScreen">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen</RemoteDir>
+                        <Operation>64</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen</RemoteDir>
+                        <Operation>64</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectiOSResource">
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
@@ -1113,13 +1145,17 @@
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="iOSSimARM64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="OSX64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="OSXARM64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="OSX64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="OSXARM64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64x" Name="$(PROJECTNAME)"/>
             </Deployment>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">True</Platform>
+            </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

@@ -46,20 +46,20 @@ type
     rsExponential     // Exponential backoff intervals
   );
 
-  /// Cross Socket event types - FIXED LIKE mORMot2!
+  /// Cross Socket event types - WITH COMMAND ID!
   TCrossSocketConnectEvent = procedure(Sender: TObject) of object;
   TCrossSocketDataReceivedEvent = procedure(Sender: TObject; const Data: TBytes) of object;  // FOR STATISTICS/LOGGING ONLY!
   TCrossSocketDataSentEvent = procedure(Sender: TObject; const Data: TBytes) of object;      // FOR STATISTICS/LOGGING ONLY!
   TCrossSocketDisconnectEvent = procedure(Sender: TObject) of object;
   TCrossSocketErrorEvent = procedure(Sender: TObject; const ErrorMsg: string) of object;
-  TCrossSocketHandleCommandEvent = procedure(Sender: TObject; const Command: TBytes) of object;  // THIS IS WHERE YOU PROCESS DATA!
+  TCrossSocketHandleCommandEvent = procedure(Sender: TObject; ClientID: Int64; const aCmd: Int64; const aData: TBytes) of object;  // THIS IS WHERE YOU PROCESS DATA!
 
   /// Server-side events
-  TCrossSocketClientConnectedEvent = procedure(Sender: TObject; ClientID: Integer) of object;
-  TCrossSocketClientDisconnectedEvent = procedure(Sender: TObject; ClientID: Integer) of object;
-  TCrossSocketServerDataReceivedEvent = procedure(Sender: TObject; ClientID: Integer; const Data: TBytes) of object;  // FOR STATISTICS/LOGGING ONLY!
-  TCrossSocketServerDataSentEvent = procedure(Sender: TObject; ClientID: Integer; const Data: TBytes) of object;      // FOR STATISTICS/LOGGING ONLY!
-  TCrossSocketServerHandleCommandEvent = procedure(Sender: TObject; ClientID: Integer; const Command: TBytes) of object;  // THIS IS WHERE YOU PROCESS DATA!
+  TCrossSocketClientConnectedEvent = procedure(Sender: TObject; ClientID: Int64) of object;
+  TCrossSocketClientDisconnectedEvent = procedure(Sender: TObject; ClientID: Int64) of object;
+  TCrossSocketServerDataReceivedEvent = procedure(Sender: TObject; ClientID: Int64; const Data: TBytes) of object;  // FOR STATISTICS/LOGGING ONLY!
+  TCrossSocketServerDataSentEvent = procedure(Sender: TObject; ClientID: Int64; const Data: TBytes) of object;      // FOR STATISTICS/LOGGING ONLY!
+  TCrossSocketServerHandleCommandEvent = procedure(Sender: TObject; ClientID: Int64; const aCmd: Int64; const aData: TBytes) of object;  // THIS IS WHERE YOU PROCESS DATA!
 
   /// State change events
   TCrossSocketStateChangeEvent = procedure(Sender: TObject; OldState, NewState: TCrossSocketConnectionState; const StateDescription: string) of object;
@@ -104,7 +104,7 @@ type
 
   /// Client connection info for tracking
   TClientConnectionInfo = record
-    ClientID: Integer;
+    ClientID: Int64;
     Connection: ICrossConnection;
     IP: string;
     ConnectedAt: TDateTime;

@@ -15,9 +15,6 @@ uses
   Net.CrossSocket.Base;
 
 type
-  // Client ID type for easy identification - MATCH THE SERVER!
-  TClientID = string;
-
   /// **FIXED: HUMAN-FRIENDLY WEBSOCKET STATE CONSTANTS THAT ACTUALLY WORK!**
   TCrossWebSocketStatus = (
     wsUnknown,        // 0 - Unknown/Initial state
@@ -34,20 +31,20 @@ type
     wmtBinary         // 2 - Binary message
   );
 
-  /// Cross Socket WebSocket event types - FIXED TO MATCH SERVER!
+  /// Cross Socket WebSocket event types - WITH COMMAND ID!
   TCrossWebSocketConnectEvent = procedure(Sender: TObject) of object;
   TCrossWebSocketDataReceivedEvent = procedure(Sender: TObject; const MessageType: TCrossWebSocketMessageType; const Data: TBytes) of object;  // FOR STATISTICS/LOGGING ONLY!
   TCrossWebSocketDataSentEvent = procedure(Sender: TObject; const Data: TBytes) of object;      // FOR STATISTICS/LOGGING ONLY!
   TCrossWebSocketDisconnectEvent = procedure(Sender: TObject) of object;
   TCrossWebSocketErrorEvent = procedure(Sender: TObject; const ErrorMsg: string) of object;
-  TCrossWebSocketHandleMessageEvent = procedure(Sender: TObject; const MessageType: TCrossWebSocketMessageType; const Data: TBytes) of object;  // THIS IS WHERE YOU PROCESS DATA!
+  TCrossWebSocketHandleMessageEvent = procedure(Sender: TObject; ClientID: Int64; const aCmd: Int64; const aData: TBytes) of object;  // THIS IS WHERE YOU PROCESS DATA!
 
-  /// Server-side WebSocket events - FIXED TO MATCH SERVER IMPLEMENTATION!
-  TCrossWebSocketClientConnectedEvent = procedure(Sender: TObject; const ClientID: TClientID; ClientConnection: ICrossWebSocketConnection) of object;
-  TCrossWebSocketClientDisconnectedEvent = procedure(Sender: TObject; const ClientID: TClientID; ClientConnection: ICrossWebSocketConnection) of object;
-  TCrossWebSocketServerDataReceivedEvent = procedure(Sender: TObject; ClientConnection: ICrossWebSocketConnection; const MessageType: TCrossWebSocketMessageType; const Data: TBytes) of object;  // FOR STATISTICS/LOGGING ONLY!
-  TCrossWebSocketServerDataSentEvent = procedure(Sender: TObject; ClientConnection: ICrossWebSocketConnection; const Data: TBytes) of object;      // FOR STATISTICS/LOGGING ONLY!
-  TCrossWebSocketServerHandleMessageEvent = procedure(Sender: TObject; const ClientID: TClientID; ClientConnection: ICrossWebSocketConnection; const MessageType: TCrossWebSocketMessageType; const Data: TBytes) of object;  // FIXED TO MATCH SERVER!
+  /// Server-side WebSocket events - WITH COMMAND ID!
+  TCrossWebSocketClientConnectedEvent = procedure(Sender: TObject; ClientID: Int64; ClientConnection: ICrossWebSocketConnection) of object;
+  TCrossWebSocketClientDisconnectedEvent = procedure(Sender: TObject; ClientID: Int64; ClientConnection: ICrossWebSocketConnection) of object;
+  TCrossWebSocketServerDataReceivedEvent = procedure(Sender: TObject; ClientID: Int64; ClientConnection: ICrossWebSocketConnection; const MessageType: TCrossWebSocketMessageType; const Data: TBytes) of object;  // FOR STATISTICS/LOGGING ONLY!
+  TCrossWebSocketServerDataSentEvent = procedure(Sender: TObject; ClientID: Int64; ClientConnection: ICrossWebSocketConnection; const Data: TBytes) of object;      // FOR STATISTICS/LOGGING ONLY!
+  TCrossWebSocketServerHandleMessageEvent = procedure(Sender: TObject; ClientID: Int64; ClientConnection: ICrossWebSocketConnection; const aCmd: Int64; const aData: TBytes) of object;  // THIS IS WHERE YOU PROCESS DATA!
 
   /// State change events
   TCrossWebSocketStateChangeEvent = procedure(Sender: TObject; OldState, NewState: TCrossWebSocketStatus; const StateDescription: string) of object;
@@ -70,7 +67,7 @@ type
 
   /// Client connection info for tracking
   TWebSocketClientConnectionInfo = record
-    ClientID: TClientID;  // ADDED CLIENT ID!
+    ClientID: Int64;
     Connection: ICrossWebSocketConnection;
     IP: string;
     ConnectedAt: TDateTime;

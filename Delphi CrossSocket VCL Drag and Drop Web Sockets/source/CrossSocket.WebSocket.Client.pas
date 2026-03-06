@@ -15,37 +15,44 @@ uses
   CrossSocket.WebSocket.Base;
 
 type
-  // RE-EXPORT INTERFACES FOR IDE COMPATIBILITY - THIS IS THE FIX!
   ICrossWebSocket = Net.CrossWebSocketClient.ICrossWebSocket;
   ICrossWebSocketMgr = Net.CrossWebSocketClient.ICrossWebSocketMgr;
   TWsMessageType = Net.CrossWebSocketParser.TWsMessageType;
   TCrossWebSocketStatus = CrossSocket.WebSocket.Base.TCrossWebSocketStatus;
 
-  // MINIMAL events - NO CLIENT ID BULLSHIT
+  // **Receive buffer for message reassembly**
+  TReceiveBuffer = record
+    Buffer: TBytes;
+    ExpectedLength: Integer;
+    CurrentLength: Integer;
+    HeaderReceived: Boolean;
+  end;
+
   TCrossWebSocketConnectEvent = procedure(Sender: TObject) of object;
   TCrossWebSocketDisconnectEvent = procedure(Sender: TObject) of object;
   TCrossWebSocketErrorEvent = procedure(Sender: TObject; const ErrorMsg: string) of object;
-  TCrossWebSocketHandleMessageEvent = procedure(Sender: TObject; const Data: TBytes) of object;  // ONLY TBYTES!
+  TCrossWebSocketHandleMessageEvent = procedure(Sender: TObject; ClientID: Int64; const aCmd: Int64; const aData: TBytes) of object;
 
-  /// OPTIMIZED Cross Socket WebSocket Client - FOR 100K CONNECTIONS - ASYNC ONLY
+  /// WebSocket Client WITH MESSAGE FRAMING AND COMMAND ID!
   TCrossSocketWebSocketClient = class(TComponent)
   private
-    // Core Cross Socket WebSocket objects
     fWebSocket: ICrossWebSocket;
     fWebSocketMgr: ICrossWebSocketMgr;
 
-    // MINIMAL connection properties - NO OVERHEAD
     fUrl: string;
     fConnected: Boolean;
     fConnecting: Boolean;
     fLastError: string;
     fCurrentStatus: TCrossWebSocketStatus;
 
-    // ESSENTIAL properties ONLY
+    // **Message framing**
+    fUseMessageFraming: Boolean;
+    fMaxMessageSize: Integer;
+    fReceiveBuffer: TReceiveBuffer;
+
     fActive: Boolean;
     fMaskingKey: Cardinal;
 
-    // OPTIMIZED reconnection - NO VCL TIMERS!
     fAutoReconnect: Boolean;
     fReconnectInterval: Integer;
     fReconnectAttempts: Integer;
@@ -54,17 +61,19 @@ type
     fUserDisconnected: Boolean;
     fLastReconnectTime: TDateTime;
 
-    // MINIMAL events - NO STATISTICS OVERHEAD
     fOnConnect: TCrossWebSocketConnectEvent;
     fOnDisconnect: TCrossWebSocketDisconnectEvent;
     fOnError: TCrossWebSocketErrorEvent;
-    fOnHandleMessage: TCrossWebSocketHandleMessageEvent;  // ONLY ESSENTIAL EVENT!
+    fOnHandleMessage: TCrossWebSocketHandleMessageEvent;
 
-    // ATOMIC event flags - THREAD SAFE
-    fInConnectEvent: Integer;   // Use Integer for atomic operations
-    fInDisconnectEvent: Integer; // Use Integer for atomic operations
+    fInConnectEvent: Integer;
+    fInDisconnectEvent: Integer;
 
-    // Property setters - MINIMAL ONLY
+    // **Message framing helpers**
+    function CreateMessageFrame(const aCmd: Int64; const Data: TBytes): TBytes;
+    procedure ProcessReceivedData(const Data: TBytes);
+    procedure ResetReceiveBuffer;
+
     procedure SetActive(const Value: Boolean);
     procedure SetConnected(const Value: Boolean);
     procedure SetUrl(const Value: string);
@@ -72,10 +81,11 @@ type
     procedure SetReconnectInterval(const Value: Integer);
     procedure SetMaxReconnectAttempts(const Value: Integer);
     procedure SetMaskingKey(const Value: Cardinal);
+    procedure SetUseMessageFraming(const Value: Boolean);
+    procedure SetMaxMessageSize(const Value: Integer);
 
-    // MINIMAL helper methods
     procedure DoError(const ErrorMsg: string);
-    procedure DoHandleMessage(const Data: TBytes);
+    procedure DoHandleMessage(const aCmd: Int64; const aData: TBytes);
     procedure DoConnect;
     procedure DoDisconnect;
     procedure HandleUnexpectedDisconnection;
@@ -90,16 +100,10 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    /// OPTIMIZED METHODS - NO OVERHEAD
     function Connect: Boolean;
     procedure Disconnect;
-
-    /// SINGLE SEND METHOD - ASYNC ONLY - TBYTES ONLY!
-    function SendCommand(const Data: TBytes): Boolean;
-
+    function SendCommand(const aCmd: Int64; const aData: TBytes): Boolean;
     procedure Ping;
-
-    /// ESSENTIAL STATUS METHODS ONLY
     function IsConnected: Boolean;
     function IsConnecting: Boolean;
     function IsReconnecting: Boolean;
@@ -108,27 +112,27 @@ type
     procedure ResetReconnectAttempts;
 
   published
-    /// MINIMAL PROPERTIES - NO OVERHEAD
     property Active: Boolean read fActive write SetActive default False;
     property Url: string read fUrl write SetUrl;
     property Connected: Boolean read fConnected write SetConnected default False;
     property MaskingKey: Cardinal read fMaskingKey write SetMaskingKey default 0;
 
-    /// OPTIMIZED RECONNECTION - NO VCL TIMERS
+    // **Message framing properties**
+    property UseMessageFraming: Boolean read fUseMessageFraming write SetUseMessageFraming default True;
+    property MaxMessageSize: Integer read fMaxMessageSize write SetMaxMessageSize default 104857600; // 100MB
+
     property AutoReconnect: Boolean read fAutoReconnect write SetAutoReconnect default False;
     property ReconnectInterval: Integer read fReconnectInterval write SetReconnectInterval default 5000;
     property MaxReconnectAttempts: Integer read fMaxReconnectAttempts write SetMaxReconnectAttempts default 0;
 
-    /// READ-ONLY STATUS
     property Connecting: Boolean read fConnecting;
     property Reconnecting: Boolean read fReconnecting;
     property Status: TCrossWebSocketStatus read fCurrentStatus;
 
-    /// MINIMAL EVENTS - NO STATISTICS OVERHEAD
     property OnConnect: TCrossWebSocketConnectEvent read fOnConnect write fOnConnect;
     property OnDisconnect: TCrossWebSocketDisconnectEvent read fOnDisconnect write fOnDisconnect;
     property OnError: TCrossWebSocketErrorEvent read fOnError write fOnError;
-    property OnHandleMessage: TCrossWebSocketHandleMessageEvent read fOnHandleMessage write fOnHandleMessage;  // ONLY ESSENTIAL EVENT!
+    property OnHandleMessage: TCrossWebSocketHandleMessageEvent read fOnHandleMessage write fOnHandleMessage;
   end;
 
 procedure Register;
@@ -136,8 +140,12 @@ procedure Register;
 implementation
 
 uses
-  Windows, // For InterlockedExchange
-  DateUtils; // For MilliSecondsBetween
+  Windows,
+  DateUtils;
+
+const
+  MESSAGE_HEADER_SIZE = 4; // 4 bytes for message length
+  COMMAND_ID_SIZE = 8;     // 8 bytes for command ID (Int64)
 
 { TCrossSocketWebSocketClient }
 
@@ -145,27 +153,28 @@ constructor TCrossSocketWebSocketClient.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  // ATOMIC event flags initialization
   fInConnectEvent := 0;
   fInDisconnectEvent := 0;
 
   InitializeDefaults;
 
-  // Create Cross Socket WebSocket Manager - OPTIMIZED FOR HIGH CONCURRENCY
-  fWebSocketMgr := TCrossWebSocketMgr.Create(1); // MINIMAL THREADS - Scale at server level!
+  fWebSocketMgr := TCrossWebSocketMgr.Create(1);
 end;
 
 procedure TCrossSocketWebSocketClient.InitializeDefaults;
 begin
-  // MINIMAL initialization - NO OVERHEAD
   fUrl := 'ws://localhost:8080';
   fConnected := False;
   fConnecting := False;
   fCurrentStatus := wsUnknown;
   fActive := False;
-  fMaskingKey := 0; // Auto-generate
+  fMaskingKey := 0;
 
-  // OPTIMIZED reconnection - NO VCL TIMERS
+  // **Message framing defaults**
+  fUseMessageFraming := True;
+  fMaxMessageSize := 104857600; // 100MB
+  ResetReceiveBuffer;
+
   fAutoReconnect := False;
   fReconnectInterval := 5000;
   fMaxReconnectAttempts := 0;
@@ -178,20 +187,17 @@ end;
 destructor TCrossSocketWebSocketClient.Destroy;
 begin
   try
-    // Force disconnect - NO TIMER CLEANUP NEEDED
     if fConnected or fConnecting then
     begin
       try
         InternalDisconnect;
       except
-        // Force cleanup even if disconnect fails
         fConnected := False;
         fConnecting := False;
         fReconnecting := False;
       end;
     end;
 
-    // Cleanup WebSocket
     if fWebSocket <> nil then
     begin
       try
@@ -202,7 +208,6 @@ begin
       end;
     end;
 
-    // Cleanup WebSocket Manager
     if fWebSocketMgr <> nil then
     begin
       try
@@ -214,7 +219,6 @@ begin
     end;
 
   except
-    // Ignore ALL destructor errors - force cleanup
     fWebSocket := nil;
     fWebSocketMgr := nil;
   end;
@@ -223,7 +227,154 @@ begin
 end;
 
 // =============================================================================
-// OPTIMIZED CONNECTION METHODS - THREAD SAFE, NO OVERHEAD
+// **MESSAGE FRAMING WITH COMMAND ID IMPLEMENTATION**
+// =============================================================================
+
+procedure TCrossSocketWebSocketClient.ResetReceiveBuffer;
+begin
+  SetLength(fReceiveBuffer.Buffer, 0);
+  fReceiveBuffer.ExpectedLength := 0;
+  fReceiveBuffer.CurrentLength := 0;
+  fReceiveBuffer.HeaderReceived := False;
+end;
+
+function TCrossSocketWebSocketClient.CreateMessageFrame(const aCmd: Int64; const Data: TBytes): TBytes;
+var
+  DataLen: Cardinal;
+  TotalLen: Cardinal;
+begin
+  if not fUseMessageFraming then
+  begin
+    // Without framing, just send cmdID + data
+    SetLength(Result, COMMAND_ID_SIZE + Length(Data));
+    PInt64(@Result[0])^ := aCmd;
+    if Length(Data) > 0 then
+      Move(Data[0], Result[COMMAND_ID_SIZE], Length(Data));
+    Exit;
+  end;
+
+  // Calculate total payload size (cmdID + data)
+  DataLen := COMMAND_ID_SIZE + Length(Data);
+  TotalLen := MESSAGE_HEADER_SIZE + DataLen;
+
+  SetLength(Result, TotalLen);
+
+  // Write length header (4 bytes, little-endian) - total payload size
+  PCardinal(@Result[0])^ := DataLen;
+
+  // Write command ID (8 bytes)
+  PInt64(@Result[MESSAGE_HEADER_SIZE])^ := aCmd;
+
+  // Copy data
+  if Length(Data) > 0 then
+    Move(Data[0], Result[MESSAGE_HEADER_SIZE + COMMAND_ID_SIZE], Length(Data));
+end;
+
+procedure TCrossSocketWebSocketClient.ProcessReceivedData(const Data: TBytes);
+var
+  dataOffset: Integer;
+  bytesToCopy: Integer;
+  completeMessage: TBytes;
+  expectedLen: Cardinal;
+  cmdID: Int64;
+  cmdData: TBytes;
+begin
+  if not fUseMessageFraming then
+  begin
+    // No framing - extract cmdID and data directly
+    if Length(Data) < COMMAND_ID_SIZE then
+    begin
+      DoError('Message too short - missing command ID');
+      Exit;
+    end;
+
+    cmdID := PInt64(@Data[0])^;
+    SetLength(cmdData, Length(Data) - COMMAND_ID_SIZE);
+    if Length(cmdData) > 0 then
+      Move(Data[COMMAND_ID_SIZE], cmdData[0], Length(cmdData));
+
+    DoHandleMessage(cmdID, cmdData);
+    Exit;
+  end;
+
+  dataOffset := 0;
+
+  while dataOffset < Length(Data) do
+  begin
+    // Step 1: Read header if not received yet
+    if not fReceiveBuffer.HeaderReceived then
+    begin
+      bytesToCopy := MESSAGE_HEADER_SIZE - fReceiveBuffer.CurrentLength;
+      if bytesToCopy > (Length(Data) - dataOffset) then
+        bytesToCopy := Length(Data) - dataOffset;
+
+      if Length(fReceiveBuffer.Buffer) < MESSAGE_HEADER_SIZE then
+        SetLength(fReceiveBuffer.Buffer, MESSAGE_HEADER_SIZE);
+
+      Move(Data[dataOffset], fReceiveBuffer.Buffer[fReceiveBuffer.CurrentLength], bytesToCopy);
+      Inc(fReceiveBuffer.CurrentLength, bytesToCopy);
+      Inc(dataOffset, bytesToCopy);
+
+      // Check if header complete
+      if fReceiveBuffer.CurrentLength = MESSAGE_HEADER_SIZE then
+      begin
+        expectedLen := PCardinal(@fReceiveBuffer.Buffer[0])^;
+
+        // Validate message size (must be at least cmdID size)
+        if (expectedLen < COMMAND_ID_SIZE) or (expectedLen > Cardinal(fMaxMessageSize)) then
+        begin
+          DoError(Format('Server sent invalid message size: %d bytes', [expectedLen]));
+          ResetReceiveBuffer;
+          Exit;
+        end;
+
+        fReceiveBuffer.HeaderReceived := True;
+        fReceiveBuffer.ExpectedLength := expectedLen;
+        fReceiveBuffer.CurrentLength := 0;
+        SetLength(fReceiveBuffer.Buffer, expectedLen);
+      end;
+    end
+    // Step 2: Read message body
+    else
+    begin
+      bytesToCopy := fReceiveBuffer.ExpectedLength - fReceiveBuffer.CurrentLength;
+      if bytesToCopy > (Length(Data) - dataOffset) then
+        bytesToCopy := Length(Data) - dataOffset;
+
+      Move(Data[dataOffset], fReceiveBuffer.Buffer[fReceiveBuffer.CurrentLength], bytesToCopy);
+      Inc(fReceiveBuffer.CurrentLength, bytesToCopy);
+      Inc(dataOffset, bytesToCopy);
+
+      // Check if message complete
+      if fReceiveBuffer.CurrentLength = fReceiveBuffer.ExpectedLength then
+      begin
+        // Extract complete message
+        SetLength(completeMessage, fReceiveBuffer.ExpectedLength);
+        Move(fReceiveBuffer.Buffer[0], completeMessage[0], fReceiveBuffer.ExpectedLength);
+
+        // Reset buffer for next message
+        ResetReceiveBuffer;
+
+        // Extract cmdID (first 8 bytes)
+        cmdID := PInt64(@completeMessage[0])^;
+
+        // Extract data (remaining bytes)
+        SetLength(cmdData, Length(completeMessage) - COMMAND_ID_SIZE);
+        if Length(cmdData) > 0 then
+          Move(completeMessage[COMMAND_ID_SIZE], cmdData[0], Length(cmdData));
+
+        // Fire OnHandleMessage with cmdID and data
+        DoHandleMessage(cmdID, cmdData);
+
+        // Continue processing remaining data
+        Continue;
+      end;
+    end;
+  end;
+end;
+
+// =============================================================================
+// CONNECTION METHODS
 // =============================================================================
 
 function TCrossSocketWebSocketClient.Connect: Boolean;
@@ -235,6 +386,7 @@ begin
   try
     fUserDisconnected := False;
     fCurrentStatus := wsConnecting;
+    ResetReceiveBuffer;
     InternalConnect;
     Result := True;
   except
@@ -256,19 +408,15 @@ begin
     fConnecting := True;
     fConnected := False;
 
-    // Create WebSocket instance
     fWebSocket := fWebSocketMgr.CreateWebSocket(fUrl);
 
-    // Set masking key if specified
     if fMaskingKey <> 0 then
       fWebSocket.MaskingKey := fMaskingKey;
 
-    // OPTIMIZED event handlers - ATOMIC FLAGS, NO OVERHEAD
     fWebSocket
       .OnOpen(
         procedure
         begin
-          // ATOMIC check to prevent duplicate calls - THREAD SAFE
           if InterlockedExchange(fInConnectEvent, 1) = 1 then
             Exit;
 
@@ -278,7 +426,8 @@ begin
             fReconnectAttempts := 0;
             fReconnecting := False;
             fCurrentStatus := wsConnected;
-            DoConnect;  // Fire OnConnect event ONLY ONCE
+            ResetReceiveBuffer;
+            DoConnect;
           finally
             InterlockedExchange(fInConnectEvent, 0);
           end;
@@ -286,13 +435,12 @@ begin
       .OnMessage(
         procedure(const AMessageType: TWsMessageType; const AMessageData: TBytes)
         begin
-          // DIRECT message processing - NO OVERHEAD - ONLY TBYTES!
-          DoHandleMessage(AMessageData);
+          // **Process with message framing**
+          ProcessReceivedData(AMessageData);
         end)
       .OnClose(
         procedure
         begin
-          // ATOMIC check to prevent duplicate calls - THREAD SAFE
           if InterlockedExchange(fInDisconnectEvent, 1) = 1 then
             Exit;
 
@@ -302,7 +450,8 @@ begin
               fConnected := False;
               fConnecting := False;
               fCurrentStatus := wsDisconnected;
-              DoDisconnect;  // Fire OnDisconnect event ONLY ONCE
+              ResetReceiveBuffer;
+              DoDisconnect;
               HandleUnexpectedDisconnection;
             end;
           finally
@@ -310,7 +459,6 @@ begin
           end;
         end);
 
-    // Open connection - events will be fired automatically
     fWebSocket.Open;
 
   except
@@ -339,16 +487,14 @@ begin
     fConnected := False;
     fConnecting := False;
     fReconnecting := False;
+    ResetReceiveBuffer;
 
-    // Close WebSocket - OnClose will be called automatically
     if fWebSocket <> nil then
     begin
       try
-        fWebSocket.Close;  // This will trigger OnClose automatically
+        fWebSocket.Close;
       except
-        // Ignore close errors but still clean up
         fWebSocket := nil;
-        // If close failed, manually fire disconnect
         if InterlockedExchange(fInDisconnectEvent, 1) = 0 then
         begin
           try
@@ -361,7 +507,6 @@ begin
     end
     else
     begin
-      // No WebSocket to close, manually fire disconnect
       if InterlockedExchange(fInDisconnectEvent, 1) = 0 then
       begin
         try
@@ -377,7 +522,6 @@ begin
     on E: Exception do
     begin
       fLastError := 'Disconnect error: ' + E.Message;
-      // Force cleanup even on error
       fWebSocket := nil;
       fConnected := False;
       fConnecting := False;
@@ -387,10 +531,10 @@ begin
 end;
 
 // =============================================================================
-// SINGLE SEND METHOD - ASYNC ONLY - TBYTES ONLY!
+// SEND METHOD
 // =============================================================================
 
-function TCrossSocketWebSocketClient.SendCommand(const Data: TBytes): Boolean;
+function TCrossSocketWebSocketClient.SendCommand(const aCmd: Int64; const aData: TBytes): Boolean;
 begin
   Result := True;
   if not IsConnected or (fWebSocket = nil) then
@@ -400,13 +544,14 @@ begin
   end;
 
   try
-    // ASYNC - Fire and forget - non-blocking
     TThread.CreateAnonymousThread(
       procedure
+      var
+        framedData: TBytes;
       begin
         try
-          // DIRECT send - NO OVERHEAD - OPTIMIZED FOR PERFORMANCE
-          fWebSocket.Send(Data);
+          framedData := CreateMessageFrame(aCmd, aData);
+          fWebSocket.Send(framedData);
         except
           on E: Exception do
           begin
@@ -427,7 +572,7 @@ begin
 end;
 
 // =============================================================================
-// OPTIMIZED RECONNECTION - NO VCL TIMERS!
+// RECONNECTION
 // =============================================================================
 
 procedure TCrossSocketWebSocketClient.HandleUnexpectedDisconnection;
@@ -439,11 +584,10 @@ begin
     fReconnecting := True;
     fCurrentStatus := wsConnecting;
 
-    // OPTIMIZED: Schedule reconnection using Cross Socket's thread pool
     TThread.CreateAnonymousThread(
       procedure
       begin
-        Sleep(fReconnectInterval); // Simple sleep instead of VCL timer
+        Sleep(fReconnectInterval);
         AttemptReconnect;
       end).Start;
   end;
@@ -451,11 +595,9 @@ end;
 
 procedure TCrossSocketWebSocketClient.AttemptReconnect;
 begin
-  // Check if we should still reconnect
   if not fAutoReconnect or fUserDisconnected or fConnected then
     Exit;
 
-  // Check time-based throttling
   if (fLastReconnectTime > 0) and
      (MilliSecondsBetween(Now, fLastReconnectTime) < fReconnectInterval) then
     Exit;
@@ -470,7 +612,6 @@ begin
     begin
       DoError('Reconnection failed: ' + E.Message);
 
-      // Schedule next attempt if we haven't exceeded max attempts
       if (fMaxReconnectAttempts = 0) or (fReconnectAttempts < fMaxReconnectAttempts) then
       begin
         TThread.CreateAnonymousThread(
@@ -490,7 +631,7 @@ begin
 end;
 
 // =============================================================================
-// OPTIMIZED PROPERTY SETTERS - NO OVERHEAD
+// PROPERTY SETTERS
 // =============================================================================
 
 procedure TCrossSocketWebSocketClient.SetActive(const Value: Boolean);
@@ -546,8 +687,23 @@ begin
     fWebSocket.MaskingKey := Value;
 end;
 
+procedure TCrossSocketWebSocketClient.SetUseMessageFraming(const Value: Boolean);
+begin
+  if fConnected or fConnecting then
+    raise Exception.Create('Cannot change UseMessageFraming while connected');
+  fUseMessageFraming := Value;
+  ResetReceiveBuffer;
+end;
+
+procedure TCrossSocketWebSocketClient.SetMaxMessageSize(const Value: Integer);
+begin
+  if Value < 1024 then
+    raise Exception.Create('MaxMessageSize must be at least 1024 bytes');
+  fMaxMessageSize := Value;
+end;
+
 // =============================================================================
-// ESSENTIAL STATUS METHODS ONLY
+// STATUS METHODS
 // =============================================================================
 
 function TCrossSocketWebSocketClient.IsConnected: Boolean;
@@ -581,7 +737,7 @@ begin
 end;
 
 // =============================================================================
-// MINIMAL EVENT METHODS - NO OVERHEAD
+// EVENT METHODS
 // =============================================================================
 
 procedure TCrossSocketWebSocketClient.DoError(const ErrorMsg: string);
@@ -590,11 +746,10 @@ begin
     fOnError(Self, ErrorMsg);
 end;
 
-// ONLY ESSENTIAL EVENT - NO OVERHEAD - TBYTES ONLY!
-procedure TCrossSocketWebSocketClient.DoHandleMessage(const Data: TBytes);
+procedure TCrossSocketWebSocketClient.DoHandleMessage(const aCmd: Int64; const aData: TBytes);
 begin
   if Assigned(fOnHandleMessage) then
-    fOnHandleMessage(Self, Data);
+    fOnHandleMessage(Self, 0, aCmd, aData); // ClientID = 0 for client-side
 end;
 
 procedure TCrossSocketWebSocketClient.DoConnect;
